@@ -22,7 +22,11 @@ motionController::motionController(QObject *parent) :
 }
 
 bool motionController::openPort(const QString &portName) {
+#ifdef Q_OS_MAC
+    m_serialPort.setPortName(QLatin1String("/dev/tty.") + portName);
+#else
     m_serialPort.setPortName(portName);
+#endif
     m_portName = portName;
     return m_serialPort.open(QSerialPort::ReadWrite);
 }
@@ -729,7 +733,7 @@ void motionController::processCommands() {
         m_serialPort.setProperty("command", cr.command);
         m_serialPort.setProperty("subAddress", cr.subAddress);
 
-        qDebug()<<"command processing:"<<QByteArray((const char*)&cr, cr.size()).toHex();
+        //qDebug()<<"command processing:"<<QByteArray((const char*)&cr, cr.size()).toHex();
 
         m_serialPort.write((const char*)&cr, cr.size());
         m_serialPort.flush();
@@ -785,7 +789,7 @@ void motionController::serialPortReadyRead() {
 
             unsigned char command = m_serialPort.property("command").toUInt();
             unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
-            qDebug()<<"command processed:"<<m_repliesBuffer.left(10 + dataSize).toHex();
+            //qDebug()<<"command processed:"<<m_repliesBuffer.left(10 + dataSize).toHex();
             replyEmiter(subAddress, command, reply);
 
             m_repliesBuffer.remove(0, 10 + dataSize);

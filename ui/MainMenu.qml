@@ -178,7 +178,10 @@ Rectangle {
             uncheckedImage: "qrc:///images/ui/menuSettingsUnchecked.png"
             enabled: !window.progressFormVisible
             text: qsTr("Settings")
-            onClicked: window.connected = false
+            onClicked: {
+                window.closePort()
+                window.connected = false
+            }
         }
 
         MenuButton {

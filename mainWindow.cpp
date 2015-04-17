@@ -31,6 +31,7 @@ mainWindow::mainWindow(QObject *parent)
     connect(m_pRootItem, SIGNAL(portsRescanClicked()), this, SLOT(portsRescanClicked()));
     connect(m_pRootItem, SIGNAL(checkMotorAttachmentClicked()), this, SLOT(checkMotorAttachmentClicked()));
     connect(m_pRootItem, SIGNAL(connectToPortClicked(QString,QString)), this, SLOT(connectToPortClicked(QString,QString)));
+    connect(m_pRootItem, SIGNAL(closePort()), this, SLOT(closePort()));
 
     connect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(programProgressRequest()));
     connect(&m_movementTimer, SIGNAL(timeout()), this, SLOT(movementCheckRequest()));
@@ -274,4 +275,8 @@ void mainWindow::powerSaveStatusFinished(const QByteArray &data) {
     m_pRootItem->setProperty("motor3PowerSave", (ret & 4) != 0);
 
     controller.motorsStatus();
+}
+
+void mainWindow::closePort() {
+    controller.closePort();
 }

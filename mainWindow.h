@@ -42,6 +42,7 @@ private slots:
     void connectToPortClicked(const QString &portName, const QString &address);
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
+    void closePort();
 };
 
 #endif // MAINWINDOW_H

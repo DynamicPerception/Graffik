@@ -80,6 +80,7 @@ ApplicationWindow {
     signal checkMotorAttachmentClicked()
     signal validateRequest()
     signal setCameraEnabled(bool enable)
+    signal closePort()
 
     onSliderMoved: window.motorsOnStartPositions = false
     onJoystickMoved: window.motorsOnStartPositions = false
