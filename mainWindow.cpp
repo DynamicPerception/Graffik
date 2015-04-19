@@ -200,7 +200,7 @@ void mainWindow::motorsStatusFinished(const QByteArray &data) {
     }
 
     unsigned char ret = data[1];
-    //ret = 0xff;
+    ret = 0xff;
     m_pRootItem->setProperty("motor1Available", (ret & 1) != 0);
     m_pRootItem->setProperty("motor2Available", (ret & 2) != 0);
     m_pRootItem->setProperty("motor3Available", (ret & 4) != 0);

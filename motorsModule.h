@@ -5,6 +5,7 @@
 
 struct motion {
     qreal leadIn;
+    qreal leadOut;
     qreal acceleration;
     qreal deceleration;
     qreal travelTime;

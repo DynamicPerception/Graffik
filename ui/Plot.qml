@@ -20,6 +20,16 @@ Item {
         canvas.requestPaint()
     }
 
+    function clear() {
+        point1.x = -5
+        point2.x = 200
+        point3.x = background.width - 200 - point3.width
+        point4.x = background.width - point4.width + 5
+
+        plot.changeMotion()
+        canvas.requestPaint()
+    }
+
     function changeMotion() {
         var w = (background.width + 5)
         var p1 = (point1.x + 5) / w
@@ -44,10 +54,11 @@ Item {
             width: 10; height: 10
             radius: 5
             color: "#FFFFFF"
-            z: 1
+            z: x + 5 > parent.width / 2 ? 2 : 1
 
             MouseArea {
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: 40; height: 40
                 drag.target: point1
                 drag.axis: Drag.XAxis
                 drag.minimumX: -5
@@ -63,10 +74,11 @@ Item {
             width: 10; height: 10
             radius: 5
             color: "#FFFFFF"
-            z: 1
+            z: x + 5 > parent.width / 2 ? 2 : 1
 
             MouseArea {
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: 40; height: 40
                 drag.target: point2
                 drag.axis: Drag.XAxis
                 drag.minimumX: point1.x
@@ -82,10 +94,11 @@ Item {
             width: 10; height: 10
             radius: 5
             color: "#FFFFFF"
-            z: 1
+            z: x + 5 < parent.width / 2 ? 2 : 1
 
             MouseArea {
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: 40; height: 40
                 drag.target: point3
                 drag.axis: Drag.XAxis
                 drag.minimumX: point2.x
@@ -101,10 +114,11 @@ Item {
             width: 10; height: 10
             radius: 5
             color: "#FFFFFF"
-            z: 1
+            z: x + 5 < parent.width / 2 ? 2 : 1
 
             MouseArea {
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: 40; height: 40
                 drag.target: point4
                 drag.axis: Drag.XAxis
                 drag.minimumX: point3.x

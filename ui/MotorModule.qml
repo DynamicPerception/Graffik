@@ -252,6 +252,7 @@ Components.Box {
                         easingTypeDropdown.currentIndex = 0
                         easingTypeDropdown.text = "Quadratic"
                         backlashLine.text = "0"
+                        plot.clear()
                         window.backlash(box.port, parseInt(text))
                     }
                 }
