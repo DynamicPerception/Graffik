@@ -120,6 +120,7 @@ void mainWindow::startProgramClicked() {
 
     for(unsigned char i = 1; i <= 3; ++i) {
         motion m = m_pMotorsModule->motorMotion(i);
+        length *= m.travelTime;
 
         controller.setLeadInShots(i, unsigned(length * m.leadIn));
         controller.setProgramAcceleration(i, unsigned(length * m.acceleration));

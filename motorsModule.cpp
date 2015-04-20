@@ -62,7 +62,7 @@ void motorsModule::validateProgram(int motor) {
 
     if(motor != -1) {
         motion m = m_motions[motor - 1];
-        qreal travelTime = length - m.travelTime * length;
+        length *= m.travelTime;
 
         controller.setLeadInShots((unsigned char)motor, unsigned(length * m.leadIn));
         controller.setProgramAcceleration((unsigned char)motor, unsigned(length * m.acceleration));
@@ -74,6 +74,7 @@ void motorsModule::validateProgram(int motor) {
     } else {
         for(int i = 1; i <= 3; ++i) {
             motion m = m_motions[i - 1];            
+            length *= m.travelTime;
 
             controller.setLeadInShots((unsigned char)i, unsigned(length * m.leadIn));
             controller.setProgramAcceleration((unsigned char)i, unsigned(length * m.acceleration));
