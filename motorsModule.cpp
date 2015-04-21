@@ -40,9 +40,12 @@ void motorsModule::validateProgram(int motor) {
         controller.setExposureTime(triggerTime);
         controller.setExposureDelay(exposureDelay);
 
+        // SMS mode
         if(programMode == 0) {
             length = m_pRootItem->property("videoFrames").toInt();
-        } else {
+        }
+        // Continuous TL mode
+        else {
             QString shootingHours = m_pRootItem->property("shootingHours").toString();
             QString shootingMinutes = m_pRootItem->property("shootingMinutes").toString();
             QString shootingSecs = m_pRootItem->property("shootingSecs").toString();
@@ -50,7 +53,9 @@ void motorsModule::validateProgram(int motor) {
             length = shootingHours.toInt() * 3600 + shootingSecs.toInt() * 60 + shootingSecs.toInt();
             length *= 1000;
         }
-    } else {
+    }
+    // Continuous video mode
+    else {
         float videoLengthSeconds = m_pRootItem->property("videoLengthSeconds").toFloat();
         int videoLengthMinutes = m_pRootItem->property("videoLengthMinutes").toInt();
 
@@ -60,26 +65,29 @@ void motorsModule::validateProgram(int motor) {
         length *= 1000; //to msecs
     }
 
+    // Changing graph points
     if(motor != -1) {
         motion m = m_motions[motor - 1];
-        length *= m.travelTime;
 
-        controller.setLeadInShots((unsigned char)motor, unsigned(length * m.leadIn));
-        controller.setProgramAcceleration((unsigned char)motor, unsigned(length * m.acceleration));
-        controller.setProgramDeceleration((unsigned char)motor, unsigned(length * m.deceleration));
-        controller.setTravelTime((unsigned char)motor, length);
+        controller.setLeadInShots((unsigned char)motor, unsigned(qRound(length * m.leadIn)));
+        controller.setLeadOutShots((unsigned char)motor, unsigned(qRound(length * m.leadOut)));
+        controller.setProgramAcceleration((unsigned char)motor, unsigned(qRound(length * m.acceleration)));
+        controller.setProgramDeceleration((unsigned char)motor, unsigned(qRound(length * m.deceleration)));
+        controller.setTravelTime((unsigned char)motor, unsigned(qRound(length * m.travelTime)));
 
         m_validatingMotor = (unsigned char)motor;
         controller.validateMotor((unsigned char)motor);
-    } else {
+    }
+    // Changing input other than graph points
+    else {
         for(int i = 1; i <= 3; ++i) {
             motion m = m_motions[i - 1];            
-            length *= m.travelTime;
 
-            controller.setLeadInShots((unsigned char)i, unsigned(length * m.leadIn));
-            controller.setProgramAcceleration((unsigned char)i, unsigned(length * m.acceleration));
-            controller.setProgramDeceleration((unsigned char)i, unsigned(length * m.deceleration));
-            controller.setTravelTime((unsigned char)i, length);
+            controller.setLeadInShots((unsigned char)i, unsigned(qRound(length * m.leadIn)));
+            controller.setLeadOutShots((unsigned char)i, unsigned(qRound(length * m.leadOut)));
+            controller.setProgramAcceleration((unsigned char)i, unsigned(qRound(length * m.acceleration)));
+            controller.setProgramDeceleration((unsigned char)i, unsigned(qRound(length * m.deceleration)));
+            controller.setTravelTime((unsigned char)i, unsigned(qRound(length * m.travelTime)));
         }
 
         controller.validateMotors();
@@ -117,11 +125,22 @@ void motorsModule::clearClicked(int motor) {
 }
 
 void motorsModule::motionChanged(int motor, qreal p1, qreal p2, qreal p3, qreal p4) {
-    m_motions[(unsigned char)(motor - 1)].leadIn = p1;
-    m_motions[(unsigned char)(motor - 1)].leadOut = p4 - p3;
-    m_motions[(unsigned char)(motor - 1)].acceleration = p2 - p1;
-    m_motions[(unsigned char)(motor - 1)].deceleration = p4 - p3;
-    m_motions[(unsigned char)(motor - 1)].travelTime = p4 - p1;
+
+    // If the point is very close to 1, assume it is 1
+    float point[4] = {p1, p2, p3, p4};
+    for(int i = 0; i < 4; i++){
+        if(point[i] > 0.99)
+            point[i] = 1;
+    }
+    qDebug()<< "p1: " << point[0];
+    qDebug()<< "p2: " << point[1];
+    qDebug()<< "p3: " << point[2];
+    qDebug()<< "p4: " << point[3];
+    m_motions[(unsigned char)(motor - 1)].leadIn = point[0];
+    m_motions[(unsigned char)(motor - 1)].leadOut = 1 - point[3];
+    m_motions[(unsigned char)(motor - 1)].acceleration = point[1] - point[0];
+    m_motions[(unsigned char)(motor - 1)].deceleration = point[3] - point[2];
+    m_motions[(unsigned char)(motor - 1)].travelTime = point[3] - point[0];
 
     validateProgram(motor);
 }

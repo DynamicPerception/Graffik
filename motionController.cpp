@@ -139,7 +139,7 @@ void motionController::setMotorAcceleration(unsigned char motor, float value) {
 }
 
 void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
-    if(m_motorsInfo[motor - 1].leadInShoots == shots)
+    if(m_motorsInfo[motor - 1].leadInShots == shots)
         return;
 
     qDebug()<<"setting lead in shots, motor:"<<motor<<"value:"<<shots;
@@ -148,7 +148,27 @@ void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
     cr.subAddress = motor;
     cr.command = 19;
     cr.dataLength = 4;
-    m_motorsInfo[motor - 1].leadInShoots = shots;
+    m_motorsInfo[motor - 1].leadInShots = shots;
+
+    //reorder bytes
+    std::reverse_copy((char*)&shots, (char*)&shots + 4, cr.data);
+
+    if(m_serialPort.isOpen()) {
+        m_requestsQueue.enqueue(cr);
+    } else qDebug()<<"serial port is not opened";
+}
+
+void motionController::setLeadOutShots(unsigned char motor, unsigned shots) {
+    if(m_motorsInfo[motor - 1].leadOutShots == shots)
+        return;
+
+    qDebug()<<"setting lead out shots, motor:"<<motor<<"value:"<<shots;
+    commandRequest cr;
+    cr.address = m_deviceAddress;
+    cr.subAddress = motor;
+    cr.command = 25;
+    cr.dataLength = 4;
+    m_motorsInfo[motor - 1].leadOutShots = shots;
 
     //reorder bytes
     std::reverse_copy((char*)&shots, (char*)&shots + 4, cr.data);
@@ -733,7 +753,7 @@ void motionController::processCommands() {
         m_serialPort.setProperty("command", cr.command);
         m_serialPort.setProperty("subAddress", cr.subAddress);
 
-        //qDebug()<<"command processing:"<<QByteArray((const char*)&cr, cr.size()).toHex();
+        qDebug()<<"command processing:"<<QByteArray((const char*)&cr, cr.size()).toHex();
 
         m_serialPort.write((const char*)&cr, cr.size());
         m_serialPort.flush();
@@ -789,7 +809,7 @@ void motionController::serialPortReadyRead() {
 
             unsigned char command = m_serialPort.property("command").toUInt();
             unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
-            //qDebug()<<"command processed:"<<m_repliesBuffer.left(10 + dataSize).toHex();
+            qDebug()<<"command processed:"<<m_repliesBuffer.left(10 + dataSize).toHex();
             replyEmiter(subAddress, command, reply);
 
             m_repliesBuffer.remove(0, 10 + dataSize);

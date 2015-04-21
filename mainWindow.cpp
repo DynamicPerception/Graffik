@@ -93,15 +93,19 @@ void mainWindow::startProgramClicked() {
     controller.setProgramMode((unsigned char)programMode);
     controller.setPingPongFlag(pingPongFlag);
 
+    // Determine the overall program length and set general parameters
     if(programMode != 2) { //not video mode
         controller.setShotsInterval(interval);
         controller.setFocusTime(focusTime);
         controller.setExposureTime(triggerTime);
         controller.setExposureDelay(exposureDelay);
 
+        // SMS mode
         if(programMode == 0) {
             length = m_pRootItem->property("videoFrames").toInt();
-        } else {
+        }
+        // Continuous TL mode
+        else {
             QString shootingHours = m_pRootItem->property("shootingHours").toString();
             QString shootingMinutes = m_pRootItem->property("shootingMinutes").toString();
             QString shootingSecs = m_pRootItem->property("shootingSecs").toString();
@@ -109,7 +113,9 @@ void mainWindow::startProgramClicked() {
             length = shootingHours.toInt() * 3600 + shootingSecs.toInt() * 60 + shootingSecs.toInt();
             length *= 1000;
         }
-    } else {
+    }
+    // Continuous video mode
+    else {
         float videoLengthSeconds = m_pRootItem->property("videoLengthSeconds").toFloat();
         int videoLengthMinutes = m_pRootItem->property("videoLengthMinutes").toInt();
 
@@ -118,14 +124,15 @@ void mainWindow::startProgramClicked() {
         length *= 1000; //to msecs
     }
 
+    // Assign motor parameters
     for(unsigned char i = 1; i <= 3; ++i) {
         motion m = m_pMotorsModule->motorMotion(i);
-        length *= m.travelTime;
 
-        controller.setLeadInShots(i, unsigned(length * m.leadIn));
-        controller.setProgramAcceleration(i, unsigned(length * m.acceleration));
-        controller.setProgramDeceleration(i, unsigned(length * m.deceleration));
-        controller.setTravelTime(i, length);
+        controller.setLeadInShots(i, unsigned(qRound(length * m.leadIn)));
+        controller.setLeadOutShots(i, unsigned(qRound(length * m.leadOut)));
+        controller.setProgramAcceleration(i, unsigned(qRound(length * m.acceleration)));
+        controller.setProgramDeceleration(i, unsigned(qRound(length * m.deceleration)));
+        controller.setTravelTime(i, unsigned(qRound(length * m.travelTime)));
     }
 
     controller.startPlannedMove();
