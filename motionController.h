@@ -53,7 +53,8 @@ struct motorInfo {
     unsigned travelTime;
     unsigned acceleration;
     unsigned deceleration;
-    unsigned leadInShoots;
+    unsigned leadInShots;
+    unsigned leadOutShots;
     bool enable;
     bool moving;
     bool powerSave;
@@ -66,7 +67,8 @@ struct motorInfo {
         direction = 0xFF;
         maxStepSpeed = 0xFFFF;
 
-        leadInShoots = 0xFFFFFFFF;
+        leadInShots = 0xFFFFFFFF;
+        leadOutShots = 0xFFFFFFFF;
         deceleration = 0xFFFFFFFF;
         acceleration = 0xFFFFFFFF;
         travelTime = 0xFFFFFFFF;
@@ -95,6 +97,7 @@ public:
     void setShotsInterval(unsigned interval);
     void setMotorAcceleration(unsigned char motor, float value);
     void setLeadInShots(unsigned char motor, unsigned shots);
+    void setLeadOutShots(unsigned char motor, unsigned shots);
     void setExposureDelay(unsigned short delay);
     void setMaxShots(unsigned short shots);
     void setExposureTime(unsigned time);
