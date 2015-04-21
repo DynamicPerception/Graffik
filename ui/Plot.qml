@@ -122,7 +122,7 @@ Item {
                 drag.target: point4
                 drag.axis: Drag.XAxis
                 drag.minimumX: point3.x
-                drag.maximumX: background.width - width + 5
+                drag.maximumX: background.width - 5
                 onPositionChanged: canvas.requestPaint()
                 onReleased: plot.changeMotion()
             }
