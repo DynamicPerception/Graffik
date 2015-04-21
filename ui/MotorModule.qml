@@ -84,9 +84,9 @@ Components.Box {
 
             ListModel {
                 id: easingModel
-                //ListElement { name: "Linear" }
                 ListElement { name: "Quadratic" }
                 ListElement { name: "Inv. Quadratic" }
+                ListElement { name: "Linear" }
             }
 
             Column {
@@ -102,8 +102,11 @@ Components.Box {
                     z: 1
                     dataModel: easingModel
                     onCurrentIndexChanged: {
-                        //var easing = currentIndex + 1
-                        var easing = currentIndex + 2 //no linear
+                        var easing
+                        if(currentIndex == 2)
+                            easing = 1
+                        else
+                            easing = currentIndex + 2
                         window.easingType(box.port, easing)
                         plot.easing = easing
                     }
