@@ -46,11 +46,10 @@ void motorsModule::validateProgram(int motor) {
         }
         // Continuous TL mode
         else {
-            QString shootingHours = m_pRootItem->property("shootingHours").toString();
-            QString shootingMinutes = m_pRootItem->property("shootingMinutes").toString();
-            QString shootingSecs = m_pRootItem->property("shootingSecs").toString();
-
-            length = shootingHours.toInt() * 3600 + shootingSecs.toInt() * 60 + shootingSecs.toInt();
+            int shootingHours = m_pRootItem->property("shootingHours").toInt();
+            int shootingMinutes = m_pRootItem->property("shootingMinutes").toInt();
+            int shootingSecs = m_pRootItem->property("shootingSecs").toInt();
+            length = shootingHours * 3600 + shootingMinutes * 60 + shootingSecs;
             length *= 1000;
         }
     }
@@ -69,11 +68,19 @@ void motorsModule::validateProgram(int motor) {
     if(motor != -1) {
         motion m = m_motions[motor - 1];
 
-        controller.setLeadInShots((unsigned char)motor, unsigned(qRound(length * m.leadIn)));
-        controller.setLeadOutShots((unsigned char)motor, unsigned(qRound(length * m.leadOut)));
-        controller.setProgramAcceleration((unsigned char)motor, unsigned(qRound(length * m.acceleration)));
-        controller.setProgramDeceleration((unsigned char)motor, unsigned(qRound(length * m.deceleration)));
-        controller.setTravelTime((unsigned char)motor, unsigned(qRound(length * m.travelTime)));
+        unsigned leadIn = unsigned(qRound(length * m.leadIn));
+        unsigned leadOut = unsigned(qRound(length * m.leadOut));
+        unsigned accel = unsigned(qRound(length * m.acceleration));
+        unsigned decel = unsigned(qRound(length * m.deceleration));
+
+        // This ensures enforces travel will never be off by a frame in SMS due to rounding
+        unsigned travel = length - (leadIn + leadOut);
+
+        controller.setLeadInShots((unsigned char)motor, leadIn);
+        controller.setLeadOutShots((unsigned char)motor, leadOut);
+        controller.setProgramAcceleration((unsigned char)motor, accel);
+        controller.setProgramDeceleration((unsigned char)motor, decel);
+        controller.setTravelTime((unsigned char)motor, travel);
 
         m_validatingMotor = (unsigned char)motor;
         controller.validateMotor((unsigned char)motor);
@@ -83,11 +90,19 @@ void motorsModule::validateProgram(int motor) {
         for(int i = 1; i <= 3; ++i) {
             motion m = m_motions[i - 1];            
 
-            controller.setLeadInShots((unsigned char)i, unsigned(qRound(length * m.leadIn)));
-            controller.setLeadOutShots((unsigned char)i, unsigned(qRound(length * m.leadOut)));
-            controller.setProgramAcceleration((unsigned char)i, unsigned(qRound(length * m.acceleration)));
-            controller.setProgramDeceleration((unsigned char)i, unsigned(qRound(length * m.deceleration)));
-            controller.setTravelTime((unsigned char)i, unsigned(qRound(length * m.travelTime)));
+            unsigned leadIn = unsigned(qRound(length * m.leadIn));
+            unsigned leadOut = unsigned(qRound(length * m.leadOut));
+            unsigned accel = unsigned(qRound(length * m.acceleration));
+            unsigned decel = unsigned(qRound(length * m.deceleration));
+
+            // This ensures enforces travel will never be off by a frame in SMS due to rounding
+            unsigned travel = length - (leadIn + leadOut);
+
+            controller.setLeadInShots((unsigned char)i, leadIn);
+            controller.setLeadOutShots((unsigned char)i, leadOut);
+            controller.setProgramAcceleration((unsigned char)i, accel);
+            controller.setProgramDeceleration((unsigned char)i, decel);
+            controller.setTravelTime((unsigned char)i, travel);
         }
 
         controller.validateMotors();

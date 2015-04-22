@@ -29,9 +29,9 @@ ApplicationWindow {
     property bool connected: false
     property int videoLengthMinutes: 0
     property real videoLengthSeconds: 12.5
-    property string shootingHours: "00"
-    property string shootingMinutes: "20"
-    property string shootingSecs: "00"
+    property int shootingHours: 00
+    property int shootingMinutes: 20
+    property int shootingSecs: 00
     property var availablePorts
 
     property bool motor1Available: false
