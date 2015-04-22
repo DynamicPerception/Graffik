@@ -16,11 +16,13 @@ struct motion {
     qreal prevTravelTime;
     quint8 prevMicrostep;
 
+    // Set default values
     motion() {
         leadIn = 0;
         acceleration = 0.333333;
-        deceleration = 0.99187 - 0.658537;
-        travelTime = 0.658537 - 0.333333;
+        deceleration = 0.333333;
+        travelTime = 1;
+        leadOut = 0;
 
         prevLeadIn = -1;
         prevAcceleration = -1;
