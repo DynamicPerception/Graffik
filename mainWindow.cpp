@@ -127,11 +127,19 @@ void mainWindow::startProgramClicked() {
     for(unsigned char i = 1; i <= 3; ++i) {
         motion m = m_pMotorsModule->motorMotion(i);
 
-        controller.setLeadInShots(i, unsigned(qRound(length * m.leadIn)));
-        controller.setLeadOutShots(i, unsigned(qRound(length * m.leadOut)));
-        controller.setProgramAcceleration(i, unsigned(qRound(length * m.acceleration)));
-        controller.setProgramDeceleration(i, unsigned(qRound(length * m.deceleration)));
-        controller.setTravelTime(i, unsigned(qRound(length * m.travelTime)));
+        unsigned leadIn = unsigned(qRound(length * m.leadIn));
+        unsigned leadOut = unsigned(qRound(length * m.leadOut));
+        unsigned accel = unsigned(qRound(length * m.acceleration));
+        unsigned decel = unsigned(qRound(length * m.deceleration));
+
+        // This ensures enforces travel will never be off by a frame in SMS due to rounding
+        unsigned travel = length - (leadIn + leadOut);
+
+        controller.setLeadInShots((unsigned char)i, leadIn);
+        controller.setLeadOutShots((unsigned char)i, leadOut);
+        controller.setProgramAcceleration((unsigned char)i, accel);
+        controller.setProgramDeceleration((unsigned char)i, decel);
+        controller.setTravelTime((unsigned char)i, travel);
     }
 
     controller.startPlannedMove();
