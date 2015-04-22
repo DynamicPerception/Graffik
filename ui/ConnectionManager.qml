@@ -67,6 +67,13 @@ Item {
                 z: 1
             }
 
+//            Components.LineEdit {
+//                id: addressLine
+//                width: 80
+//                text: "3"
+//                validator: IntValidator { bottom: 0; top: 5 }
+//            }
+
             Components.StandardButton {
                 id: connectButton
                 width: 80
@@ -74,12 +81,67 @@ Item {
                 onClicked: window.connectToPortClicked(comDropdown.text, "3")
             }
 
+//            Image {
+//                id: buttonsImage
+//                source: {
+//                    if(refreshArea.pressed) return "qrc:///images/ui/cmRefreshPressed.png"
+//                    if(connectArea.pressed) return "qrc:///images/ui/cmConnectPressed.png"
+//                    return "qrc:///images/ui/cmNormal.png"
+//                }
+
+//                Components.Label {
+//                    anchors.verticalCenter: parent.verticalCenter
+//                    anchors.left: parent.left
+//                    width: parent.width - 30
+//                    text: qsTr("Connect")
+//                    verticalAlignment: Text.AlignHCenter
+//                    color: "#FFFFFF"
+//                }
+
+//                Item {
+//                    anchors.top: parent.top
+//                    anchors.bottom: parent.bottom
+//                    anchors.right: parent.right
+//                    width: 30
+
+//                    Image {
+//                        anchors.centerIn: parent
+//                        source: "qrc:///images/ui/rescan.png"
+//                    }
+//                }
+
+//                MouseArea {
+//                    id: refreshArea
+//                    anchors.top: parent.top
+//                    anchors.bottom: parent.bottom
+//                    anchors.right: parent.right
+//                    width: 30
+//                    onClicked: window.portsRescanClicked()
+//                }
+
+//                MouseArea {
+//                    id: connectArea
+//                    anchors.left: parent.left
+//                    anchors.top: parent.top
+//                    anchors.bottom: parent.bottom
+//                    width: parent.width - 30
+//                    onClicked: window.connectToPortClicked(comDropdown.text, "3")
+//                }
+//            }
+
             Components.Label {
                 width: comDropdown.width
                 text: qsTr("Port")
                 verticalAlignment: Text.AlignHCenter
                 color: "#FFFFFF"
             }
+
+//            Components.Label {
+//                width: 80
+//                text: qsTr("Address")
+//                verticalAlignment: Text.AlignHCenter
+//                color: "#FFFFFF"
+//            }
         }
 
         Components.VerticalSeparator {

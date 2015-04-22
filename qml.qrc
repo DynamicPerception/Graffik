@@ -23,6 +23,7 @@
         <file>ui/RadioButton.qml</file>
         <file>ui/ProgressForm.qml</file>
         <file>ui/MessageBox.qml</file>
+        <file>ui/PortsDropdown.qml</file>
     </qresource>
     <qresource prefix="/images">
         <file>ui/joystickInnerBg.png</file>
@@ -93,5 +94,6 @@
         <file>ui/MotorModule.qml</file>
         <file>ui/JoystickModule.qml</file>
         <file>ui/ConnectionManagerModule.qml</file>
+        <file>ui/ConnectionManager.qml</file>
     </qresource>
 </RCC>
