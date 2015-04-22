@@ -46,11 +46,10 @@ void motorsModule::validateProgram(int motor) {
         }
         // Continuous TL mode
         else {
-            QString shootingHours = m_pRootItem->property("shootingHours").toString();
-            QString shootingMinutes = m_pRootItem->property("shootingMinutes").toString();
-            QString shootingSecs = m_pRootItem->property("shootingSecs").toString();
-
-            length = shootingHours.toInt() * 3600 + shootingSecs.toInt() * 60 + shootingSecs.toInt();
+            int shootingHours = m_pRootItem->property("shootingHours").toInt();
+            int shootingMinutes = m_pRootItem->property("shootingMinutes").toInt();
+            int shootingSecs = m_pRootItem->property("shootingSecs").toInt();
+            length = shootingHours * 3600 + shootingMinutes * 60 + shootingSecs;
             length *= 1000;
         }
     }
@@ -68,7 +67,6 @@ void motorsModule::validateProgram(int motor) {
     // Changing graph points
     if(motor != -1) {
         motion m = m_motions[motor - 1];
-
         controller.setLeadInShots((unsigned char)motor, unsigned(qRound(length * m.leadIn)));
         controller.setLeadOutShots((unsigned char)motor, unsigned(qRound(length * m.leadOut)));
         controller.setProgramAcceleration((unsigned char)motor, unsigned(qRound(length * m.acceleration)));

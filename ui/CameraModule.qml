@@ -50,10 +50,10 @@ Components.Box {
 
         window.videoLengthMinutes = m
         window.videoLengthSeconds = s
-        lengthLineMinutes1.text = m
-        lengthLineSeconds1.text = s < 10 ? "0" + s : s
-        lengthLineMinutes2.text = lengthLineMinutes1.text
-        lengthLineSeconds2.text = lengthLineMinutes2.text
+        lengthLineCompiledMinutes.text = m
+        lengthLineCompiledSeconds.text = s < 10 ? "0" + s : s
+        lengthLineVideoMinutes.text = lengthLineCompiledMinutes.text
+        lengthLineVideoSeconds.text = lengthLineVideoMinutes.text
         window.validateRequest()
     }
 
@@ -193,6 +193,11 @@ Components.Box {
             hoursLine.text = h < 10 ? "0" + h : h
             minutesLine.text = m < 10 ? "0" + m : m
             secondsLine.text = s < 10 ? "0" + s : s
+
+            window.shootingHours = hoursLine.text
+            window.shootingMinutes = minutesLine.text
+            window.shootingSecs = secondsLine.text
+            window.validateRequest()
         }
     }
 
@@ -202,8 +207,8 @@ Components.Box {
         var interval = parseFloat(intervalLine.text)
         var fps = parseInt(fpsDropdown.text)
 
-        var m = parseFloat(lengthLineMinutes1.text)
-        var s = parseFloat(lengthLineSeconds1.text)
+        var m = parseFloat(lengthLineCompiledMinutes.text)
+        var s = parseFloat(lengthLineCompiledSeconds.text)
         var frames = Math.round((m * 60 + s) * fps)
 
         window.videoLengthMinutes = m
@@ -339,13 +344,13 @@ Components.Box {
 
                 // Video length minutes
                 Components.LabeledLineEdit {
-                    id: lengthLineMinutes2
+                    id: lengthLineVideoMinutes
                     width: parent.itemWidth
                     validator: IntValidator { bottom: 0; top: 9 }
                     text: window.videoLengthMinutes
                     label: "M"
                     onAccepted: {
-                        lengthLineMinutes1.text = text
+                        lengthLineCompiledMinutes.text = text
                         box.videoLengthChanged()
                     }
                 }
@@ -364,7 +369,7 @@ Components.Box {
 
                 // Video length seconds
                 Components.LabeledLineEdit {
-                    id: lengthLineSeconds2
+                    id: lengthLineVideoSeconds
                     width: parent.itemWidth
                     validator: DoubleValidator {
                         notation: DoubleValidator.StandardNotation
@@ -376,7 +381,7 @@ Components.Box {
                     text: box.round(window.videoLengthSeconds)
                     label: "S"
                     onAccepted: {
-                        lengthLineSeconds1.text = text
+                        lengthLineCompiledSeconds.text = text
                         box.videoLengthChanged()
                     }
                 }
@@ -759,7 +764,6 @@ Components.Box {
                 text: window.shootingSecs
                 label: "S"
                 onAccepted: box.shootingDurationChanged()
-                }
             }
         }
 
@@ -816,14 +820,14 @@ Components.Box {
         // Separator
         Components.VerticalSeparator { width: parent.width }
 
-        // Video duration label
+        // Compiled video duration label
         Components.Label {
             anchors.horizontalCenter: parent.horizontalCenter
             font.pixelSize: 16
             text: qsTr("Video Duration")
         }
 
-        // Video duration input line
+        // Compiled video duration input line
         Column {
             id: videoLengthColumn
             anchors.left: parent.left
@@ -833,15 +837,15 @@ Components.Box {
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                // Video duration minutes input
+                // Compiled video duration minutes input
                 Components.LabeledLineEdit {
-                    id: lengthLineMinutes1
+                    id: lengthLineCompiledMinutes
                     width: videoLengthColumn.itemWidth
                     validator: IntValidator { bottom: 0; top: 9 }
                     text: window.videoLengthMinutes
                     label: "M"
                     onAccepted: {
-                        lengthLineMinutes2.text = text
+                        lengthLineVideoMinutes.text = text
                         box.videoLengthChanged()
                     }
                 }
@@ -859,9 +863,9 @@ Components.Box {
                     }
                 }
 
-                // Video duration seconds input
+                // Compiled video duration seconds input
                 Components.LabeledLineEdit {
-                    id: lengthLineSeconds1
+                    id: lengthLineCompiledSeconds
                     width: 80
                     validator: DoubleValidator {
                         notation: DoubleValidator.StandardNotation
@@ -873,7 +877,7 @@ Components.Box {
                     text: box.round(window.videoLengthSeconds)
                     label: "S"
                     onAccepted: {
-                        lengthLineSeconds2.text = text
+                        lengthLineVideoSeconds.text = text
                         box.videoLengthChanged()
                     }
                 }
