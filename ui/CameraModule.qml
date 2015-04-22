@@ -11,6 +11,11 @@ Components.Box {
 
     Component.onCompleted: completed = true
 
+
+    /*******************************
+      Program Calculator Functions
+    ********************************/
+
     function round(value) {
         var n = Math.round(parseFloat(value) * 10) / 10
         var s = '' + n
@@ -220,6 +225,12 @@ Components.Box {
         setVideoLength(frames / fps)
     }
 
+
+    /*******************************
+             UI Componenets
+    ********************************/
+
+    // Frames per second (FPS) dropdown elements
     ListModel {
         id: fpsModel
         ListElement { name: "24" }
@@ -228,6 +239,8 @@ Components.Box {
     }
 
     Image {
+
+        // Timelapse / Video selector switch
         id: modeButtons
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
@@ -239,6 +252,7 @@ Components.Box {
                 return "qrc:///images/ui/modeTimelapse.png"
         }
 
+        // Timelapse switch parameters
         Item {
             anchors.fill: parent
             anchors.leftMargin: parent.width / 2
@@ -267,6 +281,7 @@ Components.Box {
             }
         }
 
+        // Video switch parameters
         Item {
             anchors.fill: parent
             anchors.rightMargin: parent.width / 2
@@ -296,6 +311,7 @@ Components.Box {
         }
     }
 
+    // Video program tab components
     Column {
         id: videoColumn
         anchors.left: parent.left
@@ -320,6 +336,8 @@ Components.Box {
                 anchors.right: parent.right
 
                 property int itemWidth: (width - 40) / 3
+
+                // Video length minutes
                 Components.LabeledLineEdit {
                     id: lengthLineMinutes2
                     width: parent.itemWidth
@@ -344,6 +362,7 @@ Components.Box {
                     }
                 }
 
+                // Video length seconds
                 Components.LabeledLineEdit {
                     id: lengthLineSeconds2
                     width: parent.itemWidth
@@ -399,8 +418,9 @@ Components.Box {
                 }
             }
         }
-    }
+    } // End video tab components
 
+    // Timelapse tab components
     Column {
         id: timelapseColumn
         anchors.left: parent.left
@@ -415,6 +435,7 @@ Components.Box {
             NumberAnimation { duration: 100; easing.type: Easing.InQuad }
         }
 
+        // Continuous TL mode button
         Components.RadioButton {
             id: continuousButton
             anchors.left: parent.left
@@ -427,6 +448,7 @@ Components.Box {
             }
         }
 
+        // SMS mode button
         Components.RadioButton {
             id: moveShootButton
             anchors.left: parent.left
@@ -439,6 +461,7 @@ Components.Box {
             }
         }
 
+
         Grid {
             anchors.left: parent.left
             anchors.right: parent.right
@@ -446,6 +469,10 @@ Components.Box {
             columns: 5
 
             property int itemWidth: (width - 30) / 3
+
+            // Exposuse, buffer, interval input line
+
+            // Exposure input
             Components.LineEdit {
                 id: exposureLine
                 width: parent.itemWidth
@@ -461,9 +488,11 @@ Components.Box {
                 onAccepted: box.exposureChanged()
             }
 
-            Item { height: 30; width: 10 } //separator
+            // Separator
+            Item { height: 30; width: 10 }
 
-            Components.LineEdit { //buffer
+            // Buffer display
+            Components.LineEdit {
                 id: bufferLine
                 width: parent.itemWidth
                 readOnly: true
@@ -483,7 +512,8 @@ Components.Box {
                 }
             }
 
-            Components.LineEdit { //interval
+            // Interval input
+            Components.LineEdit {
                 id: intervalLine
                 width: parent.itemWidth
                 text: box.round(window.interval)
@@ -498,22 +528,29 @@ Components.Box {
                 onAccepted: box.intervalChanged()
             }
 
+            // Exposure, buffer, interval label line
+
+            // Exposure label
             Components.Label {
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.itemWidth
                 text: qsTr("Exposure")
             }
 
-            Item { height: 1; width: 10 } //separator
+            // Separator
+            Item { height: 1; width: 10 }
 
+            // Buffer label
             Components.Label {
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.itemWidth
                 text: qsTr("Buffer")
             }
 
-            Item { height: 1; width: 20 } //separator
+            // Separator
+            Item { height: 1; width: 20 }
 
+            // Interval label
             Components.Label {
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.itemWidth
@@ -521,8 +558,10 @@ Components.Box {
             }
         }
 
+        // Separator line
         Components.VerticalSeparator { width: parent.width }
 
+        // Advanced settings componetnts
         Item {
             width: parent.width
             clip: true
@@ -536,6 +575,7 @@ Components.Box {
                 NumberAnimation { duration: 100; easing.type: Easing.InQuad }
             }
 
+            // Advanced settings label
             Components.Label {
                 id: advLabel
                 anchors.left: parent.left
@@ -546,6 +586,7 @@ Components.Box {
                 text: qsTr("Advanced Settings")
             }
 
+            // Advanced settings switch
             Components.Switcher {
                 id: advSwitcher
                 anchors.right: parent.right
@@ -564,6 +605,7 @@ Components.Box {
                 }
             }
 
+            // Advanced settings input
             Grid {
                 id: advGrid
                 anchors.left: parent.left
@@ -574,6 +616,8 @@ Components.Box {
                 spacing: 10
 
                 property int itemWidth: (width - 20) / 3
+
+                // Focus input box
                 Components.LineEdit {
                     id: focusLine
                     width: parent.itemWidth
@@ -589,6 +633,7 @@ Components.Box {
                     onAccepted: box.advancedSettingsChanged()
                 }
 
+                // Trigger input box
                 Components.LineEdit {
                     id: triggerLine
                     width: parent.itemWidth
@@ -604,6 +649,7 @@ Components.Box {
                     onAccepted: box.advancedSettingsChanged()
                 }
 
+                // Exposure delay input box
                 Components.LineEdit {
                     id: exposureDelayLine
                     width: parent.itemWidth
@@ -619,18 +665,21 @@ Components.Box {
                     onAccepted: box.advancedSettingsChanged()
                 }
 
+                // Focus label
                 Components.Label {
                     horizontalAlignment: Text.AlignHCenter
                     width: parent.itemWidth
                     text: qsTr("Focus")
                 }
 
+                // Trigger label
                 Components.Label {
                     horizontalAlignment: Text.AlignHCenter
                     width: parent.itemWidth
                     text: qsTr("Trigger")
                 }
 
+                // Exposure delay label
                 Components.Label {
                     horizontalAlignment: Text.AlignHCenter
                     width: parent.itemWidth
@@ -639,19 +688,24 @@ Components.Box {
             }
         }
 
+        // Separator line
         Components.VerticalSeparator { width: parent.width }
 
+        // TL shooting duration label
         Components.Label {
             anchors.horizontalCenter: parent.horizontalCenter
             font.pixelSize: 16
             text: qsTr("Shooting Duration")
         }
 
+        // TL shooting duration input boxes
         Row {
             anchors.left: parent.left
             anchors.right: parent.right
 
             property int itemWidth: (width - 40) / 3
+
+            // TL duration hours input
             Components.LabeledLineEdit {
                 id: hoursLine
                 width: parent.itemWidth
@@ -661,6 +715,7 @@ Components.Box {
                 onAccepted: box.shootingDurationChanged()
             }
 
+            // ":" Separator
             Item {
                 width: 20; height: 30
                 Text {
@@ -673,6 +728,7 @@ Components.Box {
                 }
             }
 
+            // TL duration minutes input
             Components.LabeledLineEdit {
                 id: minutesLine
                 width: parent.itemWidth
@@ -682,6 +738,7 @@ Components.Box {
                 onAccepted: box.shootingDurationChanged()
             }
 
+            // ":" Separator
             Item {
                 width: 20; height: 30
                 Text {
@@ -694,6 +751,7 @@ Components.Box {
                 }
             }
 
+            // TL duration seconds input
             Components.LabeledLineEdit {
                 id: secondsLine
                 width: parent.itemWidth
@@ -701,17 +759,21 @@ Components.Box {
                 text: window.shootingSecs
                 label: "S"
                 onAccepted: box.shootingDurationChanged()
+                }
             }
         }
 
+        // Separator
         Components.VerticalSeparator { width: parent.width }
 
+        // Output label
         Components.Label {
             anchors.horizontalCenter: parent.horizontalCenter
             font.pixelSize: 16
             text: qsTr("Output")
         }
 
+        // Frames / FPS input
         Grid {
             anchors.horizontalCenter: parent.horizontalCenter
             columns: 2
@@ -719,6 +781,7 @@ Components.Box {
             rowSpacing: 10
             z: 1
 
+            // Frames input box
             Components.LineEdit {
                 id: frameLine
                 width: 70
@@ -727,6 +790,7 @@ Components.Box {
                 onAccepted: box.framesChanged()
             }
 
+            // FPS dropdown menu
             Components.Dropdown {
                 id: fpsDropdown
                 width: 60
@@ -736,25 +800,30 @@ Components.Box {
                 onCurrentIndexChanged: box.fpsChanged()
             }
 
+            // Frames label
             Components.Label {
                 width: 70
                 text: qsTr("Frames")
             }
 
+            // FPS label
             Components.Label {
                 width: 60
                 text: qsTr("FPS")
             }
         }
 
+        // Separator
         Components.VerticalSeparator { width: parent.width }
 
+        // Video duration label
         Components.Label {
             anchors.horizontalCenter: parent.horizontalCenter
             font.pixelSize: 16
             text: qsTr("Video Duration")
         }
 
+        // Video duration input line
         Column {
             id: videoLengthColumn
             anchors.left: parent.left
@@ -764,6 +833,7 @@ Components.Box {
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
 
+                // Video duration minutes input
                 Components.LabeledLineEdit {
                     id: lengthLineMinutes1
                     width: videoLengthColumn.itemWidth
@@ -776,6 +846,7 @@ Components.Box {
                     }
                 }
 
+                // ":" separator
                 Item {
                     width: 20; height: 30
                     Text {
@@ -788,6 +859,7 @@ Components.Box {
                     }
                 }
 
+                // Video duration seconds input
                 Components.LabeledLineEdit {
                     id: lengthLineSeconds1
                     width: 80
@@ -807,5 +879,5 @@ Components.Box {
                 }
             }
         }
-    }
+    }   // End timelapse tab components
 }
