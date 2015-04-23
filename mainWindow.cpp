@@ -69,6 +69,8 @@ void mainWindow::controllerConnected() {
     controller.setProgramMode(1);
     controller.setFocusWithShutter(true);
     controller.powerSaveStatus();
+    for(int i = 1; i <= 3; ++i)
+        controller.setMotorAcceleration((unsigned char)i, (float)25000);
 }
 
 /*

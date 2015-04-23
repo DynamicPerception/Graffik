@@ -69,7 +69,9 @@ void joystickModule::maxJoystickSpeedChanged(qreal pos) {
 }
 
 void joystickModule::dampingChanged(qreal pos) {
-    unsigned value = 29000.0 * pos + 1000;
+    // Use a square relationship between accel and
+    // position for better responsiveness of damping slider
+    unsigned value = 24000.0 * (pos * pos) + 1000;
     for(int i = 1; i <= 3; ++i)
         controller.setMotorAcceleration((unsigned char)i, (float)value);
 }
