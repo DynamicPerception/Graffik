@@ -2,10 +2,13 @@
 #include <QQmlApplicationEngine>
 #include "mainWindow.h"
 #include "filter.h"
+#include "popupWindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    qmlRegisterType<popupWindow>("Graffik.Components", 1, 0, "PopupWindow");
 
     filter *eventFilter = new filter;
     app.installEventFilter(eventFilter);

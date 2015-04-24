@@ -9,7 +9,8 @@ SOURCES += main.cpp \
     motorsModule.cpp \
     models/listModel.cpp \
     models/comPortItem.cpp \
-    filter.cpp
+    filter.cpp \
+    popupWindow.cpp
 
 RESOURCES += qml.qrc
 
@@ -32,4 +33,5 @@ HEADERS += \
     motorsModule.h \
     models/listModel.h \
     models/comPortItem.h \
-    filter.h
+    filter.h \
+    popupWindow.h
