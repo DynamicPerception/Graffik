@@ -23,33 +23,35 @@ Rectangle {
         }
     }
 
+
+    // Version Number
+    Column {
+        anchors.verticalCenter: parent.verticalCenter
+        x: 70
+        spacing: 3
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.family: "Arial"
+            font.pixelSize: 16
+            renderType: Text.NativeRendering
+            color: "#FFFFFF"
+            text: qsTr("0.11")
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.family: "Arial"
+            font.pixelSize: 13
+            renderType: Text.NativeRendering
+            color: "#808080"
+            text: qsTr("Version")
+        }
+    }
+
     Row {
         anchors.centerIn: parent
         spacing: 20
-
-        // Version Number
-        Column {
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 3
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                font.family: "Arial"
-                font.pixelSize: 16
-                renderType: Text.NativeRendering
-                color: "#FFFFFF"
-                text: qsTr("0.10")
-            }
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                font.family: "Arial"
-                font.pixelSize: 13
-                renderType: Text.NativeRendering
-                color: "#808080"
-                text: qsTr("Version")
-            }
-        }
 
         // Current Time
         Column {
