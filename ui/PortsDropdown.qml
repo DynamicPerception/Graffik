@@ -102,10 +102,11 @@ Item {
 
     PopupWindow {
         id: popup
+        objectName: "popupWindow"
         height: dropRect.height
         property var position: dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
         x: position.x + window.x
-        y: position.y + window.y
+        y: position.y + window.y - 2
         width: dropdown.width
         color: "transparent"
 
@@ -114,55 +115,52 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            //radius: 4
+            radius: 4
             clip: true
             height: dropColumn.height + 3
             color: "#161616"
 
-            Rectangle {
-                anchors.fill: parent
-                anchors.bottomMargin: 1
-                //radius: 4
-                color: "#161616"
+            Column {
+                id: dropColumn
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.topMargin: 3
 
-                Column {
-                    id: dropColumn
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.topMargin: 3
+                Repeater {
+                    id: dropRepeater
+                    onCountChanged: if(count === 0) currentText.text = ""
+                    delegate: Item {
+                        width: dropColumn.width
+                        height: 30
 
-                    Repeater {
-                        id: dropRepeater
-                        onCountChanged: if(count === 0) currentText.text = ""
-                        delegate: Item {
-                            width: dropColumn.width
-                            height: 30
+                        Component.onCompleted: if(index === 0) currentText.text = name
+                        Connections {
+                            target: dropdown
+                            onCurrentIndexChanged: if(dropdown.currentIndex === index) currentText.text = name
+                        }
 
-                            Component.onCompleted: if(index === 0) currentText.text = name
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: 5
+                            anchors.rightMargin: 5
+                            font.family: fontLight.name
+                            font.pixelSize: 18
+                            renderType: Text.NativeRendering
+                            elide: Text.ElideRight
+                            color: "#AAAAAA"
+                            text: name
+                        }
 
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.leftMargin: 5
-                                anchors.rightMargin: 5
-                                font.family: fontLight.name
-                                font.pixelSize: 18
-                                renderType: Text.NativeRendering
-                                elide: Text.ElideRight
-                                color: "#AAAAAA"
-                                text: name
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    currentText.text = name
-                                    dropdown.currentIndex = index
-                                    popup.hide()
-                                }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                currentText.text = name
+                                dropdown.currentIndex = index
+                                popup.hide()
                             }
                         }
                     }

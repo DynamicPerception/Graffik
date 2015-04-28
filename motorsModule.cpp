@@ -140,17 +140,21 @@ void motorsModule::clearClicked(int motor) {
 }
 
 void motorsModule::motionChanged(int motor, qreal p1, qreal p2, qreal p3, qreal p4) {
-
     // If the point is very close to 1, assume it is 1
-    float point[4] = {p1, p2, p3, p4};
+    float point[4];
+    point[0] = p1; point[1] = p2;
+    point[2] = p3; point[3] = p4;
+
     for(int i = 0; i < 4; i++){
         if(point[i] > 0.99)
             point[i] = 1;
     }
+
     qDebug()<< "p1: " << point[0];
     qDebug()<< "p2: " << point[1];
     qDebug()<< "p3: " << point[2];
     qDebug()<< "p4: " << point[3];
+
     m_motions[(unsigned char)(motor - 1)].leadIn = point[0];
     m_motions[(unsigned char)(motor - 1)].leadOut = 1 - point[3];
     m_motions[(unsigned char)(motor - 1)].acceleration = point[1] - point[0];

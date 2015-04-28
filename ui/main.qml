@@ -90,6 +90,7 @@ ApplicationWindow {
     function mousePressed(obj, mouseX, mouseY) {
         switch(obj.objectName) {
         case "appWindow": obj = rootItem; break;
+        case "popupWindow": return
         }
 
         var tmp = rootItem.mapFromItem(obj, mouseX, mouseY)

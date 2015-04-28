@@ -1,23 +1,12 @@
 import QtQuick 2.3
+import Graffik.Components 1.0
 
 Item {
     id: dropdown
     property alias text: currentText.text
-    property bool expanded: false
     property alias dataModel: dropRepeater.model
     property int currentIndex: 0
     height: 30
-
-    onExpandedChanged: if(expanded) window.currentItem = dropdown
-    function hide() { expanded = false }
-
-    function containsPoint(px, py) {
-        if(px < 0) return false
-        if(px > width) return false
-        if(py < 0) return false
-        if(py > headerRect.y + dropRect.height) return false
-        return true
-    }
 
     Rectangle {
         id: headerRect
@@ -56,7 +45,7 @@ Item {
 
                 Image {
                     anchors.centerIn: parent
-                    rotation: dropdown.expanded ? 180 : 0
+                    rotation: popup.visible ? 180 : 0
                     source: {
                         if(dropdownArea.pressed)
                             return "qrc:///images/ui/arrowPressed.png"
@@ -71,38 +60,32 @@ Item {
                 id: dropdownArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: dropdown.expanded = !dropdown.expanded
+                onClicked: {
+                    popup.position = dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
+                    popup.show()
+                }
             }
         }
     }
 
-    Rectangle {
-        id: dropRect
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: headerRect.bottom
-        anchors.topMargin: -3
-        radius: 4
-        clip: true
-        height: dropdown.expanded ? dropColumn.height + 3 : 0
-        color: "#2B2B2B"
-
-        Behavior on height {
-            NumberAnimation { duration: 100; easing.type: Easing.InQuad }
-        }
+    PopupWindow {
+        id: popup
+        objectName: "popupWindow"
+        height: dropRect.height
+        property var position: dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
+        x: position.x + window.x
+        y: position.y + window.y - 2
+        width: dropdown.width
+        color: "transparent"
 
         Rectangle {
+            id: dropRect
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            height: 4
-            color: "#161616"
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.bottomMargin: 1
             radius: 4
+            clip: true
+            height: dropColumn.height + 3
             color: "#161616"
 
             Column {
@@ -120,6 +103,10 @@ Item {
                         height: 30
 
                         Component.onCompleted: if(index === 0) currentText.text = name
+                        Connections {
+                            target: dropdown
+                            onCurrentIndexChanged: if(dropdown.currentIndex === index) currentText.text = name
+                        }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
@@ -139,9 +126,9 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                dropdown.expanded = false
                                 currentText.text = name
                                 dropdown.currentIndex = index
+                                popup.hide()
                             }
                         }
                     }
