@@ -95,5 +95,8 @@
         <file>ui/JoystickModule.qml</file>
         <file>ui/ConnectionManagerModule.qml</file>
         <file>ui/ConnectionManager.qml</file>
+        <file>ui/SkippedConfiguration.qml</file>
+        <file>ui/ConfigureFirstController.qml</file>
+        <file>ui/ConfigureNextController.qml</file>
     </qresource>
 </RCC>

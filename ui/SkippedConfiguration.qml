@@ -4,6 +4,7 @@ import "qrc:///components/ui" as Components
 Item {
     id: form
     visible: opacity !== 0
+    opacity: 0
 
     function show() { showAnimation.start() }
     function hide() { hideAnimation.start() }
@@ -48,47 +49,30 @@ Item {
 
         Grid {
             id: row
-            anchors.left: parent.left
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             anchors.margins: 14
-            columns: 3
+            columns: 2
             columnSpacing: 14
             rowSpacing: 4
             z: 1
 
-            property int buttonWidth: (width - 85 - 3 * columnSpacing) / 2
-            Components.LineEdit {
-                id: controllersCountEdit
-                width: 100
-                validator: IntValidator { bottom: 1; top: 255 }
-                text: window.controllersCount
-                onTextChanged: window.controllersCount = parseInt(text)
+            Components.PortsDropdown {
+                id: portDropdown
+                width: 150
+                dataModel: window.availablePorts
+                z: 1
             }
 
             Components.StandardButton {
                 id: configureButton
-                width: parent.buttonWidth
-                text: qsTr("Configure Controlls")
-                onClicked: {
-                    form.hide()
-                    configureFirstController.show()
-                }
-            }
-
-            Components.StandardButton {
-                id: skipButton
-                width: parent.buttonWidth
-                text: qsTr("Skip Configuration")
-                onClicked: {
-                    form.hide()
-                    skippedConfiguration.show()
-                }
+                width: 120
+                text: qsTr("Connect")
             }
 
             Components.Label {
-                width: controllersCountEdit.width
-                text: "# of Controllers"
+                width: portDropdown.width
+                text: "Port"
             }
         }
 
@@ -114,7 +98,7 @@ Item {
             color: "#7F7F7F"
             wrapMode: Text.Wrap
 
-            text: qsTr("Choose <font color='#FFFFFF'><b>Configure Controlls</b></font> option if you have not configured this exact group of controllers before")
+            text: qsTr("Choose connection port and press <font color='#FFFFFF'><b>Connect</b></font>")
         }
     }
 }

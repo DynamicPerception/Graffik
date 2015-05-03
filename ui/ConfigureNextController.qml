@@ -4,7 +4,9 @@ import "qrc:///components/ui" as Components
 Item {
     id: form
     visible: opacity !== 0
+    opacity: 0
 
+    property int address: 2
     function show() { showAnimation.start() }
     function hide() { hideAnimation.start() }
 
@@ -42,7 +44,7 @@ Item {
 
     Rectangle {
         anchors.centerIn: parent
-        width: 450; height: 130
+        width: 520; height: 135
         color: "#242424"
         radius: 5
 
@@ -52,43 +54,25 @@ Item {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: 14
-            columns: 3
+            columns: 2
             columnSpacing: 14
             rowSpacing: 4
             z: 1
 
-            property int buttonWidth: (width - 85 - 3 * columnSpacing) / 2
-            Components.LineEdit {
-                id: controllersCountEdit
-                width: 100
-                validator: IntValidator { bottom: 1; top: 255 }
-                text: window.controllersCount
-                onTextChanged: window.controllersCount = parseInt(text)
+            Components.StandardButton {
+                id: assignButton
+                width: (parent.width - 14) / 2
+                text: qsTr("Assign Controller %1").arg(form.address)
             }
 
             Components.StandardButton {
-                id: configureButton
-                width: parent.buttonWidth
-                text: qsTr("Configure Controlls")
+                id: cancelButton
+                width: (parent.width - 14) / 2
+                text: qsTr("Cancel Configuration")
                 onClicked: {
                     form.hide()
-                    configureFirstController.show()
+                    connectionManager.show()
                 }
-            }
-
-            Components.StandardButton {
-                id: skipButton
-                width: parent.buttonWidth
-                text: qsTr("Skip Configuration")
-                onClicked: {
-                    form.hide()
-                    skippedConfiguration.show()
-                }
-            }
-
-            Components.Label {
-                width: controllersCountEdit.width
-                text: "# of Controllers"
             }
         }
 
@@ -114,7 +98,7 @@ Item {
             color: "#7F7F7F"
             wrapMode: Text.Wrap
 
-            text: qsTr("Choose <font color='#FFFFFF'><b>Configure Controlls</b></font> option if you have not configured this exact group of controllers before")
+            text: qsTr("Unplug USB cable from controller and connect next unassigned controller. f you are using a desktop or laptop, do not move the cable to a different USB port on your host device.")
         }
     }
 }

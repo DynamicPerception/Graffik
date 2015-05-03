@@ -22,6 +22,7 @@ mainWindow::mainWindow(QObject *parent)
     connect(&controller, SIGNAL(motorStatusFinished(QByteArray)), this, SLOT(motorsStatusFinished(QByteArray)));
     connect(&controller, SIGNAL(motorsRunningFinished(QByteArray)), this, SLOT(movementCheckFinished(QByteArray)));
     connect(&controller, SIGNAL(programProgressFinished(QByteArray)), this, SLOT(programProgressFinished(QByteArray)));
+    connect(m_pRootItem, SIGNAL(assignAddressRequest(QString,int)), this, SLOT(assignAddressRequest(QString,int)));
     connect(m_pRootItem, SIGNAL(setCameraEnabled(bool)), this, SLOT(setCameraEnabled(bool)));
     connect(m_pRootItem, SIGNAL(goToProgramStartClicked()), this, SLOT(goToProgramStartClicked()));
     connect(m_pRootItem, SIGNAL(allStopClicked()), this, SLOT(allStopClicked()));
@@ -41,14 +42,7 @@ mainWindow::mainWindow(QObject *parent)
     portsRescanClicked();
 }
 
-void mainWindow::programProgressRequest() {
-    controller.programProgress();
-}
-
-void mainWindow::controllerConnected() {
-    qDebug()<<"controller connected";
-    m_pRootItem->setProperty("connected", true);
-
+void mainWindow::initController() {
     controller.setGraffikModeEnable(true);
     controller.setJoystickMode(false);
     controller.setWatchdogEnable(false);
@@ -71,6 +65,16 @@ void mainWindow::controllerConnected() {
     controller.powerSaveStatus();
     for(int i = 1; i <= 3; ++i)
         controller.setMotorAcceleration((unsigned char)i, (float)25000);
+}
+
+void mainWindow::programProgressRequest() {
+    controller.programProgress();
+}
+
+void mainWindow::controllerConnected() {
+    qDebug()<<"controller connected";
+    //m_pRootItem->setProperty("connected", true);
+    controller.assignAddress((unsigned char)m_controllerAddress);
 }
 
 /*
@@ -292,6 +296,16 @@ void mainWindow::powerSaveStatusFinished(const QByteArray &data) {
     m_pRootItem->setProperty("motor3PowerSave", (ret & 4) != 0);
 
     controller.motorsStatus();
+}
+
+void mainWindow::assignAddressRequest(const QString &portName, int address) {
+    m_controllerAddress = address;
+    if(controller.portName() == portName)
+        controller.closePort();
+
+    controller.setDeviceAddress((unsigned char)address);
+    if(controller.openPort(portName))
+        controller.firmwareVersion();
 }
 
 void mainWindow::closePort() {

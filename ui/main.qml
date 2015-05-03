@@ -19,8 +19,10 @@ ApplicationWindow {
         programStatus === 3 - going to start position
     */
 
+    property string portName: ""
     property int programStatus: 0
     property int programProgress: 0
+    property int controllersCount: 3
     property bool progressFormVisible: false
 
     property bool pingPong: false
@@ -81,6 +83,7 @@ ApplicationWindow {
     signal validateRequest()
     signal setCameraEnabled(bool enable)
     signal closePort()
+    signal assignAddressRequest(string port, int address)
 
     onSliderMoved: window.motorsOnStartPositions = false
     onJoystickMoved: window.motorsOnStartPositions = false

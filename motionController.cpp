@@ -1,6 +1,11 @@
 #include "motionController.h"
 #include <QDebug>
 
+QDebug operator << (QDebug d, const commandRequest &r) {
+    d<<"processing| address:"<<r.address<<"subAddress:"<<r.subAddress<<"command:"<<r.command<<"data:"<<QByteArray((const char*)r.data, r.dataLength).toHex();
+    return d;
+}
+
 motionController &motionControllerInstance() {
     static motionController mc;
     return mc;
@@ -11,8 +16,8 @@ motionController::motionController(QObject *parent) :
 {
     m_deviceAddress = 3;
     m_motorsInfo.resize(3);
-    m_processing = false;
     m_joystickMode = false;
+    m_blocked = false;
     m_timer.setInterval(40);
     m_timer.start();
 
@@ -35,6 +40,17 @@ void motionController::closePort() {
     m_serialPort.close();
 }
 
+void motionController::assignAddress(unsigned char address) {
+    commandRequest cr;
+    cr.address = 1;
+    cr.subAddress = 0;
+    cr.command = 4;
+    cr.dataLength = 1;
+    cr.data[0] = address;
+
+    m_requestsQueue.enqueue(cr);
+}
+
 void motionController::setGraffikModeEnable(bool enable) {
     commandRequest cr;
     cr.address = m_deviceAddress;
@@ -43,9 +59,7 @@ void motionController::setGraffikModeEnable(bool enable) {
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setMotorEnable(unsigned char motor, bool enable) {
@@ -56,11 +70,9 @@ void motionController::setMotorEnable(unsigned char motor, bool enable) {
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-        m_motorsInfo[motor - 1].enable = enable;
-        if(!enable) m_motorsInfo[motor - 1].moving = false;
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
+    m_motorsInfo[motor - 1].enable = enable;
+    if(!enable) m_motorsInfo[motor - 1].moving = false;
 }
 
 void motionController::setCameraEnable(bool enable) {
@@ -72,9 +84,7 @@ void motionController::setCameraEnable(bool enable) {
     cr.data[0] = enable ? 1 : 0;
     qDebug()<<"set camera enable:"<<enable;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setFocusWithShutter(bool enable) {
@@ -85,9 +95,7 @@ void motionController::setFocusWithShutter(bool enable) {
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setWatchdogEnable(bool enable) {
@@ -98,9 +106,7 @@ void motionController::setWatchdogEnable(bool enable) {
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setShotsInterval(unsigned interval) {
@@ -118,9 +124,7 @@ void motionController::setShotsInterval(unsigned interval) {
     //reorder bytes
     std::reverse_copy((char*)&interval, (char*)&interval + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setMotorAcceleration(unsigned char motor, float value) {
@@ -133,9 +137,7 @@ void motionController::setMotorAcceleration(unsigned char motor, float value) {
     //reorder bytes
     std::reverse_copy((char*)&value, (char*)&value + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
@@ -153,9 +155,7 @@ void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
     //reorder bytes
     std::reverse_copy((char*)&shots, (char*)&shots + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setLeadOutShots(unsigned char motor, unsigned shots) {
@@ -173,9 +173,7 @@ void motionController::setLeadOutShots(unsigned char motor, unsigned shots) {
     //reorder bytes
     std::reverse_copy((char*)&shots, (char*)&shots + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setExposureDelay(unsigned short delay) {
@@ -193,9 +191,7 @@ void motionController::setExposureDelay(unsigned short delay) {
     //reorder bytes
     std::reverse_copy((char*)&delay, (char*)&delay + 2, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setMaxShots(unsigned short shots) {
@@ -208,9 +204,7 @@ void motionController::setMaxShots(unsigned short shots) {
     //reorder bytes
     std::reverse_copy((char*)&shots, (char*)&shots + 2, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setExposureTime(unsigned time) {
@@ -228,9 +222,7 @@ void motionController::setExposureTime(unsigned time) {
     //reorder bytes
     std::reverse_copy((char*)&time, (char*)&time + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setBacklash(unsigned char motor, unsigned short value) {
@@ -248,9 +240,7 @@ void motionController::setBacklash(unsigned char motor, unsigned short value) {
     //reorder bytes
     std::reverse_copy((char*)&value, (char*)&value + 2, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setFocusTime(unsigned short time) {
@@ -268,9 +258,7 @@ void motionController::setFocusTime(unsigned short time) {
     //reorder bytes
     std::reverse_copy((char*)&time, (char*)&time + 2, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::expose(unsigned time) {
@@ -283,9 +271,7 @@ void motionController::expose(unsigned time) {
     //reorder bytes
     std::reverse_copy((char*)&time, (char*)&time + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setContinuousSpeed(unsigned char motor, float stepsPerSecs) {
@@ -299,14 +285,12 @@ void motionController::setContinuousSpeed(unsigned char motor, float stepsPerSec
     stepsPerSecs *= m_motorsInfo[motor - 1].invertDirection ? -1 : 1;
     std::reverse_copy((char*)&stepsPerSecs, (char*)&stepsPerSecs + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setMicroStepValue(unsigned char motor, unsigned char value) {
-//    if(m_motorsInfo[motor - 1].microstep == value)
-//        return;
+    //    if(m_motorsInfo[motor - 1].microstep == value)
+    //        return;
 
     qDebug()<<"setting microstep value, motor:"<<motor<<"value:"<<value;
     commandRequest cr;
@@ -317,9 +301,7 @@ void motionController::setMicroStepValue(unsigned char motor, unsigned char valu
     cr.data[0] = value;
     m_motorsInfo[motor - 1].microstep = value;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramAcceleration(unsigned char motor, unsigned value) {
@@ -337,9 +319,7 @@ void motionController::setProgramAcceleration(unsigned char motor, unsigned valu
     //reorder bytes
     std::reverse_copy((char*)&value, (char*)&value + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramDeceleration(unsigned char motor, unsigned value) {
@@ -357,9 +337,7 @@ void motionController::setProgramDeceleration(unsigned char motor, unsigned valu
     //reorder bytes
     std::reverse_copy((char*)&value, (char*)&value + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setTravelTime(unsigned char motor, unsigned time) {
@@ -377,9 +355,7 @@ void motionController::setTravelTime(unsigned char motor, unsigned time) {
     //reorder bytes
     std::reverse_copy((char*)&time, (char*)&time + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramMode(unsigned char mode) {
@@ -395,9 +371,7 @@ void motionController::setProgramMode(unsigned char mode) {
     cr.data[0] = mode;
     m_programInfo.programMode = mode;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setMaxStepSpeed(unsigned char motor, unsigned short speed) {
@@ -415,9 +389,7 @@ void motionController::setMaxStepSpeed(unsigned char motor, unsigned short speed
     //reorder bytes
     std::reverse_copy((char*)&speed, (char*)&speed + 2, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setDirection(unsigned char motor, unsigned char direction) {
@@ -428,10 +400,8 @@ void motionController::setDirection(unsigned char motor, unsigned char direction
     cr.dataLength = 1;
     cr.data[0] = direction;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-        m_motorsInfo[motor - 1].direction = direction;
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
+    m_motorsInfo[motor - 1].direction = direction;
 }
 
 void motionController::setMotorSleep(unsigned char motor, bool sleep) {
@@ -442,9 +412,7 @@ void motionController::setMotorSleep(unsigned char motor, bool sleep) {
     cr.dataLength = 1;
     cr.data[0] = sleep ? 1 : 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::moveMotor(unsigned char motor, unsigned char direction, unsigned steps) {
@@ -457,11 +425,9 @@ void motionController::moveMotor(unsigned char motor, unsigned char direction, u
 
     std::reverse_copy((char*)&steps, (char*)&steps + 4, &cr.data[1]);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-        m_motorsInfo[motor - 1].direction = direction;
-        m_motorsInfo[motor - 1].moving = true;
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
+    m_motorsInfo[motor - 1].direction = direction;
+    m_motorsInfo[motor - 1].moving = true;
 }
 
 void motionController::motorPosition(unsigned char motor) {
@@ -470,10 +436,8 @@ void motionController::motorPosition(unsigned char motor) {
     cr.subAddress = motor;
     cr.command = 106;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-        m_motorsInfo[motor - 1].moving = false;
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
+    m_motorsInfo[motor - 1].moving = false;
 }
 
 void motionController::stopMotor(unsigned char motor) {
@@ -482,10 +446,8 @@ void motionController::stopMotor(unsigned char motor) {
     cr.subAddress = motor;
     cr.command = 4;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-        m_motorsInfo[motor - 1].moving = false;
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
+    m_motorsInfo[motor - 1].moving = false;
 }
 
 void motionController::setEasingMode(unsigned char motor, unsigned char mode) {
@@ -496,9 +458,7 @@ void motionController::setEasingMode(unsigned char motor, unsigned char mode) {
     cr.dataLength = 1;
     cr.data[0] = mode;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramStartPoint(unsigned char motor, unsigned stepPosition) {
@@ -510,9 +470,7 @@ void motionController::setProgramStartPoint(unsigned char motor, unsigned stepPo
 
     std::reverse_copy((char*)&stepPosition, (char*)&stepPosition + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramStartPoint() {
@@ -522,9 +480,7 @@ void motionController::setProgramStartPoint() {
     cr.command = 26;
     cr.dataLength = 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramStopPoint(unsigned char motor, unsigned stepPosition) {
@@ -536,9 +492,7 @@ void motionController::setProgramStopPoint(unsigned char motor, unsigned stepPos
 
     std::reverse_copy((char*)&stepPosition, (char*)&stepPosition + 4, cr.data);
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setProgramStopPoint() {
@@ -548,9 +502,7 @@ void motionController::setProgramStopPoint() {
     cr.command = 27;
     cr.dataLength = 0;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::sendMotorToStartPoint(unsigned char motor) {
@@ -559,9 +511,7 @@ void motionController::sendMotorToStartPoint(unsigned char motor) {
     cr.subAddress = motor;
     cr.command = 23;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::sendMotorToStopPoint(unsigned char motor) {
@@ -570,9 +520,7 @@ void motionController::sendMotorToStopPoint(unsigned char motor) {
     cr.subAddress = motor;
     cr.command = 24;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setPingPongFlag(bool enable) {
@@ -588,9 +536,7 @@ void motionController::setPingPongFlag(bool enable) {
     cr.data[0] = enable ? 1 : 0;
     m_programInfo.pingPongFlag = enable;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setJoystickMode(bool enable) {
@@ -602,9 +548,7 @@ void motionController::setJoystickMode(bool enable) {
     cr.data[0] = enable ? 1 : 0;
     m_joystickMode = enable;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::startPlannedMove() {
@@ -613,9 +557,7 @@ void motionController::startPlannedMove() {
     cr.subAddress = 0;
     cr.command = 2;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::stopPlannedMove() {
@@ -624,9 +566,7 @@ void motionController::stopPlannedMove() {
     cr.subAddress = 0;
     cr.command = 4;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::pausePlannedMove() {
@@ -635,20 +575,17 @@ void motionController::pausePlannedMove() {
     cr.subAddress = 0;
     cr.command = 3;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::firmwareVersion() {
     commandRequest cr;
+    cr.blocking = true;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 100;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::shotsInterval() {
@@ -657,9 +594,7 @@ void motionController::shotsInterval() {
     cr.subAddress = 4;
     cr.command = 108;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::motorsStatus() {
@@ -668,9 +603,7 @@ void motionController::motorsStatus() {
     cr.subAddress = 0;
     cr.command = 124;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::motorRunning(unsigned char motor) {
@@ -679,9 +612,7 @@ void motionController::motorRunning(unsigned char motor) {
     cr.subAddress = motor;
     cr.command = 107;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::motorsRunning() {
@@ -690,9 +621,7 @@ void motionController::motorsRunning() {
     cr.subAddress = 0;
     cr.command = 128;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setDeviceAddress(unsigned char address) {
@@ -705,9 +634,7 @@ void motionController::validateMotor(unsigned char motor) {
     cr.subAddress = motor;
     cr.command = 118;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::powerSaveStatus() {
@@ -716,9 +643,7 @@ void motionController::powerSaveStatus() {
     cr.subAddress = 0;
     cr.command = 130;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::validateMotors() {
@@ -727,9 +652,7 @@ void motionController::validateMotors() {
     cr.subAddress = 0;
     cr.command = 129;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::programProgress() {
@@ -738,9 +661,7 @@ void motionController::programProgress() {
     cr.subAddress = 0;
     cr.command = 123;
 
-    if(m_serialPort.isOpen()) {
-        m_requestsQueue.enqueue(cr);
-    } else qDebug()<<"serial port is not opened";
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::invertMotor(unsigned char motor, bool yes) {
@@ -752,19 +673,24 @@ void motionController::processCommands() {
         commandRequest cr = m_requestsQueue.dequeue();
         m_serialPort.setProperty("command", cr.command);
         m_serialPort.setProperty("subAddress", cr.subAddress);
+        m_serialPort.setProperty("address", cr.address);
+        m_blocked = cr.blocking;
 
-        qDebug()<<"command processing:"<<QByteArray((const char*)&cr, cr.size()).toHex();
+        qDebug()<<cr;
 
-        m_serialPort.write((const char*)&cr, cr.size());
+        const char *pRequest = (const char*)&cr;
+        m_serialPort.write(++pRequest, cr.size());
         m_serialPort.flush();
-        m_processing = true;
-    } else {
-        m_processing = false;
     }
 }
 
-void motionController::replyEmiter(unsigned char subAddress, unsigned char command, const QByteArray &data) {
-    if(subAddress == 0) {
+void motionController::replyEmiter(unsigned char address, unsigned char subAddress,
+                                   unsigned char command, const QByteArray &data)
+{
+    if(address == 1 && subAddress == 0 && command == 4) {
+        qDebug()<<"assignAddressFinished:"<<data;
+        emit assignAddressFinished(data);
+    } else if(subAddress == 0) {
         switch(command) {
         case 100: emit firmwareVersionFinished(data); break;
         case 124: emit motorStatusFinished(data); break;
@@ -798,7 +724,7 @@ void motionController::serialPortReadyRead() {
             qDebug()<<"shifted reply";
         } else if(replyPos == -1) {
             m_repliesBuffer.clear();
-            m_processing = false;
+            m_blocked = false;
             qDebug()<<"bad reply";
             return;
         }
@@ -809,12 +735,12 @@ void motionController::serialPortReadyRead() {
 
             unsigned char command = m_serialPort.property("command").toUInt();
             unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
-            qDebug()<<"command processed:"<<m_repliesBuffer.left(10 + dataSize).toHex();
-            replyEmiter(subAddress, command, reply);
+            unsigned char address = m_serialPort.property("address").toUInt();
+            qDebug()<<"processed | address:"<<address<<"subAddress:"<<subAddress<<"command:"<<command<<"data:"<<m_repliesBuffer.left(10 + dataSize).toHex();
+            replyEmiter(address, subAddress, command, reply);
 
             m_repliesBuffer.remove(0, 10 + dataSize);
-            //we can process next command
-            //processCommands();
+            m_blocked = false;
             m_timer.start();
         }
     }
@@ -826,8 +752,7 @@ void motionController::serialPortError(QSerialPort::SerialPortError err) {
 }
 
 void motionController::timerTimeout() {
-    //qDebug()<<m_repliesBuffer.toHex();
-    //if(!m_processing)
+    if(m_serialPort.isOpen() && !m_blocked)
         processCommands();
 }
 

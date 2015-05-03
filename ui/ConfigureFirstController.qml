@@ -4,6 +4,7 @@ import "qrc:///components/ui" as Components
 Item {
     id: form
     visible: opacity !== 0
+    opacity: 0
 
     function show() { showAnimation.start() }
     function hide() { hideAnimation.start() }
@@ -42,7 +43,7 @@ Item {
 
     Rectangle {
         anchors.centerIn: parent
-        width: 450; height: 130
+        width: 520; height: 135
         color: "#242424"
         radius: 5
 
@@ -57,38 +58,41 @@ Item {
             rowSpacing: 4
             z: 1
 
-            property int buttonWidth: (width - 85 - 3 * columnSpacing) / 2
-            Components.LineEdit {
-                id: controllersCountEdit
-                width: 100
-                validator: IntValidator { bottom: 1; top: 255 }
-                text: window.controllersCount
-                onTextChanged: window.controllersCount = parseInt(text)
+            property int buttonWidth: (width - 130 - 3 * columnSpacing) / 2
+            Components.PortsDropdown {
+                id: portDropdown
+                width: 140
+                dataModel: window.availablePorts
+                z: 1
             }
 
             Components.StandardButton {
-                id: configureButton
+                id: assignButton
                 width: parent.buttonWidth
-                text: qsTr("Configure Controlls")
+                text: qsTr("Assign Controller 1")
                 onClicked: {
-                    form.hide()
-                    configureFirstController.show()
+                    if(portDropdown.text !== "") {
+                        window.portName = portDropdown.text
+                        assignButton.enabled = false
+                        cancelButton.enabled = false
+                        window.assignAddressRequest(portDropdown.text, 3)
+                    }
                 }
             }
 
             Components.StandardButton {
-                id: skipButton
+                id: cancelButton
                 width: parent.buttonWidth
-                text: qsTr("Skip Configuration")
+                text: qsTr("Cancel Configuration")
                 onClicked: {
                     form.hide()
-                    skippedConfiguration.show()
+                    connectionManager.show()
                 }
             }
 
             Components.Label {
-                width: controllersCountEdit.width
-                text: "# of Controllers"
+                width: portDropdown.width
+                text: "Port"
             }
         }
 
@@ -114,7 +118,7 @@ Item {
             color: "#7F7F7F"
             wrapMode: Text.Wrap
 
-            text: qsTr("Choose <font color='#FFFFFF'><b>Configure Controlls</b></font> option if you have not configured this exact group of controllers before")
+            text: qsTr("Make sure that controllers are not daisychained and are not powered via DC jack. Attach one controller via USB, select it's COM port, then assgn the controller. Mark your controllers with numbers for later reference.")
         }
     }
 }

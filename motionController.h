@@ -9,6 +9,7 @@
 #include <algorithm>
 
 struct commandRequest {
+    unsigned char blocking;
     unsigned char breakSequence[6];
     unsigned char address;
     unsigned char subAddress;
@@ -21,6 +22,7 @@ struct commandRequest {
         memset(breakSequence, 0, 5);
         breakSequence[5] = 0xFF;
         dataLength = 0;
+        blocking = 0;
     }
 };
 
@@ -89,6 +91,7 @@ public:
     void closePort();
     QString portName() const { return m_portName; }
 
+    void assignAddress(unsigned char address);
     void setGraffikModeEnable(bool enable);
     void setMotorEnable(unsigned char motor, bool enable);
     void setCameraEnable(bool enable);
@@ -159,7 +162,7 @@ private:
     QString m_portName;
     QByteArray m_repliesBuffer;
     QTimer m_timer;
-    bool m_processing;
+    bool m_blocked;
     bool m_joystickMode;
     unsigned char m_deviceAddress;
 
@@ -167,7 +170,8 @@ private:
     programInfo m_programInfo;
     QQueue<commandRequest> m_requestsQueue;
     void processCommands();
-    void replyEmiter(unsigned char subAddress, unsigned char command, const QByteArray &data);
+    void replyEmiter(unsigned char address, unsigned char subAddress,
+                     unsigned char command, const QByteArray &data);
 
 private slots:
     void serialPortReadyRead();
@@ -186,6 +190,7 @@ signals:
     void motorsRunningFinished(const QByteArray &data);
     void settingStartPointFinished(const QByteArray &data);
     void settingEndPointFinished(const QByteArray &data);
+    void assignAddressFinished(const QByteArray &data);
 };
 
 motionController &motionControllerInstance();

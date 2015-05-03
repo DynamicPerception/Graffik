@@ -99,8 +99,30 @@ Item {
         }
     }
 
-    Modules.ConnectionManagerModule {
+//    Modules.ConnectionManagerModule {
+//        id: connectionManager
+//        anchors.fill: parent
+//    }
+
+    Modules.ConnectionManager {
         id: connectionManager
         anchors.fill: parent
+    }
+
+    Modules.SkippedConfiguration {
+        id: skippedConfiguration
+        anchors.fill: parent
+    }
+
+    Modules.ConfigureFirstController {
+        id: configureFirstController
+        anchors.fill: parent
+    }
+
+    Repeater {
+        model: window.controllersCount
+        delegate: Modules.ConfigureNextController {
+            anchors.fill: rootItem
+        }
     }
 }

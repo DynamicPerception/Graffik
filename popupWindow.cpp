@@ -7,7 +7,11 @@ popupWindow::popupWindow(QWindow *parent) :
     QQuickWindow(parent)
 {
     setFlags(Qt::Tool | Qt::Window | Qt::FramelessWindowHint);
+#ifdef Q_OS_WIN
     setModality(Qt::WindowModal);
+#else
+    setModality(Qt::ApplicationModal);
+#endif
     m_mouseMoved = false;
 }
 

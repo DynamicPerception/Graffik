@@ -24,8 +24,10 @@ private:
     QObject *m_pRootItem;
     bool m_motorsMoving;
     bool m_isOnStartPosition;
+    int m_controllerAddress;
 
 private slots:
+    void initController();
     void programProgressRequest();
     void controllerConnected();
     void startProgramClicked();
@@ -42,6 +44,7 @@ private slots:
     void connectToPortClicked(const QString &portName, const QString &address);
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
+    void assignAddressRequest(const QString &portName, int address);
     void closePort();
 };
 

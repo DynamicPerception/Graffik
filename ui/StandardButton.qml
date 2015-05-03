@@ -25,7 +25,7 @@ BorderImage {
         font.family: "Arial"
         font.pixelSize: 16
         renderType: Text.NativeRendering
-        color: "#FFFFFF"
+        color: button.enabled ? "#FFFFFF" : "#777777"
     }
 
     Image {
@@ -36,6 +36,7 @@ BorderImage {
     MouseArea {
         id: buttonArea
         anchors.fill: parent
+        enabled: button.enabled
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: button.clicked()
