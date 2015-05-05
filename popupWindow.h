@@ -9,15 +9,25 @@ class popupWindow : public QQuickWindow
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *parentItem READ parentItem WRITE setParentItem)
+    Q_PROPERTY(int yOffset READ yOffset WRITE setYOffset NOTIFY yOffsetChanged)
+    Q_PROPERTY(int xOffset READ xOffset WRITE setXOffset NOTIFY xOffsetChanged)
 
 public:
-    explicit popupWindow(QWindow *parent = 0);
+    explicit popupWindow();
     QQuickItem *parentItem() const { return m_pParentItem; }
-    void setParentItem(QQuickItem *item);
+    virtual void setParentItem(QQuickItem *item);
+    void setYOffset(int offset);
+    void setXOffset(int offset);
+    int yOffset() const { return m_yOffset; }
+    int xOffset() const { return m_xOffset; }
 
 private:
     QQuickItem *m_pParentItem;
+    int m_yOffset;
+    int m_xOffset;
+    bool m_dismissed;
     bool m_mouseMoved;
+    bool m_needsActivatedEvent;
     void forwardEventToTransientParent(QMouseEvent *ev);
 
 protected:
@@ -25,11 +35,20 @@ protected:
     void mouseReleaseEvent(QMouseEvent *ev);
     void mouseMoveEvent(QMouseEvent *ev);
 
+protected slots:
+    void updateSize();
+    void applicationStateChanged(Qt::ApplicationState state);
+
 public slots:
-    void show();
+    virtual void show();
+    void dismissPopup();
 
 signals:
     void dismissed();
+    void geometryChanged();
+    void yOffsetChanged();
+    void xOffsetChanged();
+    void popupDismissed();
 };
 
 #endif // POPUPWINDOW_H

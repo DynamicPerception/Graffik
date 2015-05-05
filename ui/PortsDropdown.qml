@@ -25,10 +25,7 @@ Item {
                 id: dropdownArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: {
-                    popup.position = dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
-                    popup.show()
-                }
+                onClicked: popup.show()
             }
 
             Text {
@@ -87,7 +84,7 @@ Item {
 
                 Image {
                     anchors.centerIn: parent
-                    rotation: dropdown.expanded ? 180 : 0
+                    rotation: popup.visible ? 180 : 0
                     source: {
                         if(dropdownArea.pressed)
                             return "qrc:///images/ui/arrowPressed.png"
@@ -104,10 +101,9 @@ Item {
         id: popup
         objectName: "popupWindow"
         height: dropRect.height
-        property var position: dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
-        x: position.x + window.x
-        y: position.y + window.y - 2
         width: dropdown.width
+        parentItem: dropdown
+        yOffset: 26
         color: "transparent"
 
         Rectangle {

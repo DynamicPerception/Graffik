@@ -60,10 +60,7 @@ Item {
                 id: dropdownArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: {
-                    popup.position = dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
-                    popup.show()
-                }
+                onClicked: popup.show()
             }
         }
     }
@@ -72,10 +69,9 @@ Item {
         id: popup
         objectName: "popupWindow"
         height: dropRect.height
-        property var position: dropdown.mapToItem(rootItem, 0, dropdown.height - 2)
-        x: position.x + window.x
-        y: position.y + window.y - 2
         width: dropdown.width
+        parentItem: dropdown
+        yOffset: 26
         color: "transparent"
 
         Rectangle {
