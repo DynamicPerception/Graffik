@@ -40,12 +40,13 @@ private slots:
     void setCameraEnabled(bool enable);
     void motorsStatusFinished(const QByteArray &data);
     void movementCheckRequest();
+    void testControllerFinished(const QByteArray &data);
     void movementCheckFinished(const QByteArray &data);
     void connectToPortClicked(const QString &portName, const QString &address);
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
     void assignAddressRequest(const QString &portName, int address);
-    void closePort();
+    void resetPort();
 };
 
 #endif // MAINWINDOW_H

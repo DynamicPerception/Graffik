@@ -1,8 +1,10 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include "mainWindow.h"
 #include "filter.h"
 #include "popupWindow.h"
+#include "motionController.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,9 +16,10 @@ int main(int argc, char *argv[])
     app.installEventFilter(eventFilter);
 
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("controller", &motionControllerInstance());
     engine.load(QUrl(QStringLiteral("qrc:/ui/main.qml")));
-    QObject *root = engine.rootObjects().at(0);
 
+    QObject *root = engine.rootObjects().at(0);
     mainWindow mw(root);
 
     QObject::connect(eventFilter, SIGNAL(mousePressed(QVariant,QVariant,QVariant)), root, SLOT(mousePressed(QVariant,QVariant,QVariant)));

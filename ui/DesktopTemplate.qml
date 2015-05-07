@@ -119,10 +119,22 @@ Item {
         anchors.fill: parent
     }
 
+    Connections {
+      target: controller
+      ignoreUnknownSignals: true
+      onTestControllerFinished: {
+        if(window.currentControllerConfiguration === 0)
+          configureFirstController.visible = false
+        ++window.currentControllerConfiguration
+      }
+    }
+
     Repeater {
-        model: window.controllersCount
+        model: window.controllersCount - 1
         delegate: Modules.ConfigureNextController {
             anchors.fill: rootItem
+            address: window.currentControllerConfiguration
+            opacity: window.currentControllerConfiguration === index + 1 ? 1 : 0
         }
     }
 }

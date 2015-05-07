@@ -85,6 +85,7 @@ Item {
                 width: parent.buttonWidth
                 text: qsTr("Cancel Configuration")
                 onClicked: {
+                    window.currentControllerConfiguration = 0
                     form.hide()
                     connectionManager.show()
                 }

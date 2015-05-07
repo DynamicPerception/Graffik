@@ -22,6 +22,7 @@ ApplicationWindow {
     property string portName: ""
     property int programStatus: 0
     property int programProgress: 0
+    property int currentControllerConfiguration: 0
     property int controllersCount: 3
     property bool progressFormVisible: false
 

@@ -88,9 +88,10 @@ class motionController : public QObject
 
 public:
     bool openPort(const QString &portName);
-    void closePort();
+    void resetPort();
     QString portName() const { return m_portName; }
 
+    void testController();
     void assignAddress(unsigned char address);
     void setGraffikModeEnable(bool enable);
     void setMotorEnable(unsigned char motor, bool enable);
@@ -158,7 +159,7 @@ public:
 
 private:
     explicit motionController(QObject *parent = 0);
-    QSerialPort m_serialPort;
+    QSerialPort *m_pSerialPort;
     QString m_portName;
     QByteArray m_repliesBuffer;
     QTimer m_timer;
@@ -191,6 +192,7 @@ signals:
     void settingStartPointFinished(const QByteArray &data);
     void settingEndPointFinished(const QByteArray &data);
     void assignAddressFinished(const QByteArray &data);
+    void testControllerFinished(const QByteArray &data);
 };
 
 motionController &motionControllerInstance();

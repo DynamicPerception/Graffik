@@ -6,7 +6,7 @@ Item {
     visible: opacity !== 0
     opacity: 0
 
-    property int address: 2
+    property int address: 0
     function show() { showAnimation.start() }
     function hide() { hideAnimation.start() }
 
@@ -62,7 +62,12 @@ Item {
             Components.StandardButton {
                 id: assignButton
                 width: (parent.width - 14) / 2
-                text: qsTr("Assign Controller %1").arg(form.address)
+                text: qsTr("Assign Controller %1").arg(form.address + 1)
+                onClicked: {
+                    assignButton.enabled = false
+                    cancelButton.enabled = false
+                    window.assignAddressRequest(window.portName, form.address + 3)
+                }
             }
 
             Components.StandardButton {
@@ -70,6 +75,7 @@ Item {
                 width: (parent.width - 14) / 2
                 text: qsTr("Cancel Configuration")
                 onClicked: {
+                    window.currentControllerConfiguration = 0
                     form.hide()
                     connectionManager.show()
                 }
