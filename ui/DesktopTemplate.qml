@@ -99,10 +99,10 @@ Item {
         }
     }
 
-//    Modules.ConnectionManagerModule {
-//        id: connectionManager
-//        anchors.fill: parent
-//    }
+    //    Modules.ConnectionManagerModule {
+    //        id: connectionManager
+    //        anchors.fill: parent
+    //    }
 
     Modules.ConnectionManager {
         id: connectionManager
@@ -119,14 +119,25 @@ Item {
         anchors.fill: parent
     }
 
+    Timer {
+        id: delayTimer
+        interval: 400
+        repeat: false
+        running: false
+        onTriggered: {
+            if(window.currentControllerConfiguration === 0)
+                configureFirstController.visible = false
+            if(++window.currentControllerConfiguration !== window.controllersCount) {
+                window.currentControllerConfiguration = 0
+                assigningFinished.show()
+            }
+        }
+    }
+
     Connections {
-      target: controller
-      ignoreUnknownSignals: true
-      onTestControllerFinished: {
-        if(window.currentControllerConfiguration === 0)
-          configureFirstController.visible = false
-        ++window.currentControllerConfiguration
-      }
+        target: controller
+        ignoreUnknownSignals: true
+        onTestControllerFinished: delayTimer.start()
     }
 
     Repeater {
@@ -136,5 +147,10 @@ Item {
             address: window.currentControllerConfiguration
             opacity: window.currentControllerConfiguration === index + 1 ? 1 : 0
         }
+    }
+
+    Modules.AssigningFinished {
+        id: assigningFinished
+        anchors.fill: parent
     }
 }

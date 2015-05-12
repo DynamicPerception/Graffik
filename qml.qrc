@@ -98,5 +98,6 @@
         <file>ui/SkippedConfiguration.qml</file>
         <file>ui/ConfigureFirstController.qml</file>
         <file>ui/ConfigureNextController.qml</file>
+        <file>ui/AssigningFinished.qml</file>
     </qresource>
 </RCC>

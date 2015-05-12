@@ -4,7 +4,8 @@
 #include <QSerialPortInfo>
 #include <QDateTime>
 #include <QDebug>
-#include <windows.h>
+#include <QCoreApplication>
+#include <QEventLoop>
 
 mainWindow::mainWindow(QObject *parent)
     : QObject(parent)
@@ -34,7 +35,7 @@ mainWindow::mainWindow(QObject *parent)
     connect(m_pRootItem, SIGNAL(portsRescanClicked()), this, SLOT(portsRescanClicked()));
     connect(m_pRootItem, SIGNAL(checkMotorAttachmentClicked()), this, SLOT(checkMotorAttachmentClicked()));
     connect(m_pRootItem, SIGNAL(connectToPortClicked(QString,QString)), this, SLOT(connectToPortClicked(QString,QString)));
-    connect(m_pRootItem, SIGNAL(closePort()), this, SLOT(resetPort()));
+    connect(m_pRootItem, SIGNAL(closePort()), &controller, SLOT(closePort()));
 
     connect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(programProgressRequest()));
     connect(&m_movementTimer, SIGNAL(timeout()), this, SLOT(movementCheckRequest()));
@@ -234,6 +235,11 @@ void mainWindow::movementCheckRequest() {
 
 void mainWindow::testControllerFinished(const QByteArray &data) {
     controller.assignAddress((unsigned char)m_controllerAddress);
+    QTime dieTime = QTime::currentTime().addMSecs(300);
+    while(QTime::currentTime() < dieTime)
+        qApp->processEvents(QEventLoop::AllEvents, 100);
+
+    controller.closePort();
 }
 
 void mainWindow::movementCheckFinished(const QByteArray &data) {
@@ -252,8 +258,6 @@ void mainWindow::movementCheckFinished(const QByteArray &data) {
 }
 
 void mainWindow::connectToPortClicked(const QString &portName, const QString &address) {
-    controller.resetPort();
-
     controller.setDeviceAddress((unsigned char)address.toInt());
     if(controller.openPort(portName))
         controller.firmwareVersion();
@@ -305,14 +309,9 @@ void mainWindow::powerSaveStatusFinished(const QByteArray &data) {
 void mainWindow::assignAddressRequest(const QString &portName, int address) {
     qDebug()<<"connecting:"<<portName<<"address:"<<address;
     m_controllerAddress = address;
-    controller.resetPort();
 
     controller.setDeviceAddress((unsigned char)address);
     if(controller.openPort(portName))
         controller.testController();
     else qDebug()<<"port not opened";
-}
-
-void mainWindow::resetPort() {
-    controller.resetPort();
 }

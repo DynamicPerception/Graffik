@@ -85,6 +85,7 @@ ApplicationWindow {
     signal setCameraEnabled(bool enable)
     signal closePort()
     signal assignAddressRequest(string port, int address)
+    signal connectToFirstDevice()
 
     onSliderMoved: window.motorsOnStartPositions = false
     onJoystickMoved: window.motorsOnStartPositions = false

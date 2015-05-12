@@ -46,7 +46,6 @@ private slots:
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
     void assignAddressRequest(const QString &portName, int address);
-    void resetPort();
 };
 
 #endif // MAINWINDOW_H

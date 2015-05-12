@@ -14,7 +14,7 @@ motionController &motionControllerInstance() {
 motionController::motionController(QObject *parent) :
     QObject(parent)
 {
-    m_pSerialPort = NULL;
+    m_serialPort.setSettingsRestoredOnClose(false);
     m_deviceAddress = 3;
     m_motorsInfo.resize(3);
     m_joystickMode = false;
@@ -25,31 +25,28 @@ motionController::motionController(QObject *parent) :
 
 bool motionController::openPort(const QString &portName) {
     qDebug()<<"opening port";
-    m_pSerialPort = new QSerialPort(this);
-
 #ifdef Q_OS_MAC
-    m_pSerialPort->setPortName(QLatin1String("/dev/tty.") + portName);
+    m_serialPort.setPortName(QLatin1String("/dev/tty.") + portName);
 #else
-    m_pSerialPort->setPortName(portName);
+    m_serialPort.setPortName(portName);
 #endif
     m_portName = portName;
-    if(m_pSerialPort->open(QSerialPort::ReadWrite)) {
+    if(m_serialPort.open(QSerialPort::ReadWrite)) {
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timerTimeout()));
-        connect(m_pSerialPort, SIGNAL(readyRead()), this, SLOT(serialPortReadyRead()));
-        connect(m_pSerialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialPortError(QSerialPort::SerialPortError)));
+        connect(&m_serialPort, SIGNAL(readyRead()), this, SLOT(serialPortReadyRead()));
+        connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialPortError(QSerialPort::SerialPortError)));
         return true;
     }
 
     return false;
 }
 
-void motionController::resetPort() {
-    if(m_pSerialPort && m_pSerialPort->isOpen()) {
-        m_pSerialPort->close();
-        delete m_pSerialPort;
-        m_pSerialPort = NULL;
-        qDebug()<<"closing port";
-    }
+void motionController::clearPort() {
+    m_serialPort.clear();
+}
+
+void motionController::closePort() {
+    m_serialPort.close();
 }
 
 void motionController::testController() {
@@ -693,16 +690,16 @@ void motionController::invertMotor(unsigned char motor, bool yes) {
 void motionController::processCommands() {
     if(!m_requestsQueue.empty()) {
         commandRequest cr = m_requestsQueue.dequeue();
-        m_pSerialPort->setProperty("command", cr.command);
-        m_pSerialPort->setProperty("subAddress", cr.subAddress);
-        m_pSerialPort->setProperty("address", cr.address);
+        m_serialPort.setProperty("command", cr.command);
+        m_serialPort.setProperty("subAddress", cr.subAddress);
+        m_serialPort.setProperty("address", cr.address);
         m_blocked = cr.blocking;
 
         qDebug()<<cr;
 
         const char *pRequest = (const char*)&cr;
-        m_pSerialPort->write(++pRequest, cr.size());
-        m_pSerialPort->flush();
+        m_serialPort.write(++pRequest, cr.size());
+        m_serialPort.flush();
     }
 }
 
@@ -738,7 +735,7 @@ void motionController::replyEmiter(unsigned char address, unsigned char subAddre
 }
 
 void motionController::serialPortReadyRead() {
-    m_repliesBuffer.append(m_pSerialPort->readAll());
+    m_repliesBuffer.append(m_serialPort.readAll());
 
     if(m_repliesBuffer.size() >= 10) {
         int replyPos = m_repliesBuffer.indexOf(QByteArray("\x00\x00\x00\x00\x00\xFF"));
@@ -756,9 +753,9 @@ void motionController::serialPortReadyRead() {
         if(dataSize + 10 <= m_repliesBuffer.size()) {
             QByteArray reply = m_repliesBuffer.mid(10, dataSize);
 
-            unsigned char command = m_pSerialPort->property("command").toUInt();
-            unsigned char subAddress = m_pSerialPort->property("subAddress").toUInt();
-            unsigned char address = m_pSerialPort->property("address").toUInt();
+            unsigned char command = m_serialPort.property("command").toUInt();
+            unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
+            unsigned char address = m_serialPort.property("address").toUInt();
             qDebug()<<"processed | address:"<<address<<"subAddress:"<<subAddress<<"command:"<<command<<"data:"<<m_repliesBuffer.left(10 + dataSize).toHex();
             replyEmiter(address, subAddress, command, reply);
 
@@ -770,12 +767,13 @@ void motionController::serialPortReadyRead() {
 }
 
 void motionController::serialPortError(QSerialPort::SerialPortError err) {
-    if(err != QSerialPort::NoError)
+    if(err != QSerialPort::NoError) {
         qDebug()<<"serial port error:"<<err;
+    }
 }
 
 void motionController::timerTimeout() {
-    if(m_pSerialPort->isOpen() && !m_blocked)
+    if(m_serialPort.isOpen() && !m_blocked)
         processCommands();
 }
 

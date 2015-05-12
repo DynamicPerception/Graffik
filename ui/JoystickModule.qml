@@ -112,31 +112,31 @@ Item {
             anchors.topMargin: 13
             spacing: 10
 
-//            Item {
-//                anchors.left: parent.left
-//                anchors.right: parent.right
-//                height: 30
+            Item {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 30
 
-//                Components.Label {
-//                    id: advLabel
-//                    anchors.left: parent.left
-//                    anchors.verticalCenter: parent.verticalCenter
-//                    height: 20
-//                    font.pixelSize: 16
-//                    verticalAlignment: Text.AlignVCenter
-//                    text: qsTr("Address")
-//                }
+                Components.Label {
+                    id: advLabel
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 20
+                    font.pixelSize: 16
+                    verticalAlignment: Text.AlignVCenter
+                    text: qsTr("Address")
+                }
 
-//                Components.StandardButton {
-//                    anchors.right: parent.right
-//                    anchors.verticalCenter: parent.verticalCenter
-//                    width: 80
-//                    fontSize: 14
-//                    text: qsTr("Change")
-//                }
-//            }
+                Components.StandardButton {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 80
+                    fontSize: 14
+                    text: qsTr("Change")
+                }
+            }
 
-//            Components.VerticalSeparator { width: parent.width }
+            Components.VerticalSeparator { width: parent.width }
 
             Components.StyledSlider {
                 anchors.left: parent.left

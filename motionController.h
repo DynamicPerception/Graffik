@@ -88,7 +88,6 @@ class motionController : public QObject
 
 public:
     bool openPort(const QString &portName);
-    void resetPort();
     QString portName() const { return m_portName; }
 
     void testController();
@@ -159,7 +158,7 @@ public:
 
 private:
     explicit motionController(QObject *parent = 0);
-    QSerialPort *m_pSerialPort;
+    QSerialPort m_serialPort;
     QString m_portName;
     QByteArray m_repliesBuffer;
     QTimer m_timer;
@@ -178,6 +177,10 @@ private slots:
     void serialPortReadyRead();
     void serialPortError(QSerialPort::SerialPortError err);
     void timerTimeout();
+
+public slots:
+    void clearPort();
+    void closePort();
 
 signals:
     void firmwareVersionFinished(const QByteArray &data);
