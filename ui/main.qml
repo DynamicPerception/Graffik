@@ -23,6 +23,7 @@ ApplicationWindow {
     property int programStatus: 0
     property int programProgress: 0
     property int currentControllerConfiguration: 0
+    property int currentControllerAddress: 3
     property int controllersCount: 3
     property bool progressFormVisible: false
 
@@ -85,7 +86,7 @@ ApplicationWindow {
     signal setCameraEnabled(bool enable)
     signal closePort()
     signal assignAddressRequest(string port, int address)
-    signal connectToFirstDevice()
+    signal connectToDevices()
 
     onSliderMoved: window.motorsOnStartPositions = false
     onJoystickMoved: window.motorsOnStartPositions = false

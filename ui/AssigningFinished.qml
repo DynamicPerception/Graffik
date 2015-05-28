@@ -17,6 +17,7 @@ Item {
         from: 1
         duration: 100
         easing.type: Easing.InQuad
+        onStarted: nextButton.enabled = true
     }
 
     NumberAnimation {
@@ -55,7 +56,7 @@ Item {
             width: 100
             text: qsTr("Next")
             onClicked: {
-                window.connectToFirstDevice()
+                window.connectToDevices()
                 nextButton.enabled = false
             }
         }

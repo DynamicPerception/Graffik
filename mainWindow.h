@@ -17,6 +17,7 @@ public:
 
 private:
     listModel *m_pPortsModel;
+    QString m_portName;
     QTimer m_movementTimer;
     QTimer m_progressTimer;
     joystickModule *m_pJoystickModule;
@@ -37,6 +38,7 @@ private slots:
     void allStopClicked();
     void portsRescanClicked();
     void checkMotorAttachmentClicked();
+    void connectToDevices();
     void setCameraEnabled(bool enable);
     void motorsStatusFinished(const QByteArray &data);
     void movementCheckRequest();
@@ -46,6 +48,7 @@ private slots:
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
     void assignAddressRequest(const QString &portName, int address);
+    void actionFinished(const QVariant &data);
 };
 
 #endif // MAINWINDOW_H

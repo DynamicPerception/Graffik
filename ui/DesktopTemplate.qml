@@ -127,7 +127,7 @@ Item {
         onTriggered: {
             if(window.currentControllerConfiguration === 0)
                 configureFirstController.visible = false
-            if(++window.currentControllerConfiguration !== window.controllersCount) {
+            if(++window.currentControllerConfiguration >= window.controllersCount) {
                 window.currentControllerConfiguration = 0
                 assigningFinished.show()
             }
@@ -138,6 +138,7 @@ Item {
         target: controller
         ignoreUnknownSignals: true
         onTestControllerFinished: delayTimer.start()
+        onActionFinished: if(data === "init") assigningFinished.hide()
     }
 
     Repeater {

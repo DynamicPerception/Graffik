@@ -195,13 +195,20 @@ Components.Box {
                             }
                         }
 
+                        property bool first: true
                         onCheckedChanged: {
-                            window.powerSaveMode(box.port, checked)
                             switch(box.port) {
                             case 1: window.motor1PowerSave = checked; break;
                             case 2: window.motor2PowerSave = checked; break;
                             case 3: window.motor3PowerSave = checked; break;
                             }
+
+                            if(first) {
+                                first = false
+                                return
+                            }
+
+                            window.powerSaveMode(box.port, checked)
                         }
                     }
                 }

@@ -110,6 +110,7 @@ void motorsModule::validateProgram(int motor) {
 }
 
 void motorsModule::powerSaveMode(int motor, bool enable) {
+    qDebug()<<"set power save mode";
     controller.setMotorSleep((unsigned char)motor, enable);
 }
 

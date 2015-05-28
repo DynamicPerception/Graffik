@@ -25,6 +25,8 @@ mainWindow::mainWindow(QObject *parent)
     connect(&controller, SIGNAL(motorsRunningFinished(QByteArray)), this, SLOT(movementCheckFinished(QByteArray)));
     connect(&controller, SIGNAL(programProgressFinished(QByteArray)), this, SLOT(programProgressFinished(QByteArray)));
     connect(&controller, SIGNAL(testControllerFinished(QByteArray)), this, SLOT(testControllerFinished(QByteArray)));
+    connect(&controller, SIGNAL(actionFinished(QVariant)), this, SLOT(actionFinished(QVariant)));
+    connect(m_pRootItem, SIGNAL(connectToDevices()), this, SLOT(connectToDevices()));
     connect(m_pRootItem, SIGNAL(assignAddressRequest(QString,int)), this, SLOT(assignAddressRequest(QString,int)));
     connect(m_pRootItem, SIGNAL(setCameraEnabled(bool)), this, SLOT(setCameraEnabled(bool)));
     connect(m_pRootItem, SIGNAL(goToProgramStartClicked()), this, SLOT(goToProgramStartClicked()));
@@ -65,7 +67,6 @@ void mainWindow::initController() {
 
     controller.setProgramMode(1);
     controller.setFocusWithShutter(true);
-    controller.powerSaveStatus();
     for(int i = 1; i <= 3; ++i)
         controller.setMotorAcceleration((unsigned char)i, (float)25000);
 }
@@ -212,6 +213,24 @@ void mainWindow::checkMotorAttachmentClicked() {
     controller.motorsStatus();
 }
 
+void mainWindow::connectToDevices() {
+    if(!controller.openPort(m_portName)) {
+       qDebug()<<"couldn't open device";
+       return;
+    }
+
+    int controllersCount = m_pRootItem->property("controllersCount").toInt();
+    for(unsigned char i = 0; i < controllersCount; ++i) {
+       controller.setDeviceAddress(i + 3);
+
+       initController();
+       controller.powerSaveStatus();
+       controller.motorsStatus();
+    }
+
+    controller.setAction("init");
+}
+
 void mainWindow::setCameraEnabled(bool enable) {
     controller.setCameraEnable(enable);
 }
@@ -235,11 +254,7 @@ void mainWindow::movementCheckRequest() {
 
 void mainWindow::testControllerFinished(const QByteArray &data) {
     controller.assignAddress((unsigned char)m_controllerAddress);
-    QTime dieTime = QTime::currentTime().addMSecs(300);
-    while(QTime::currentTime() < dieTime)
-        qApp->processEvents(QEventLoop::AllEvents, 100);
-
-    controller.closePort();
+    controller.requestClosePort();
 }
 
 void mainWindow::movementCheckFinished(const QByteArray &data) {
@@ -302,16 +317,20 @@ void mainWindow::powerSaveStatusFinished(const QByteArray &data) {
     m_pRootItem->setProperty("motor1PowerSave", (ret & 1) != 0);
     m_pRootItem->setProperty("motor2PowerSave", (ret & 2) != 0);
     m_pRootItem->setProperty("motor3PowerSave", (ret & 4) != 0);
-
-    controller.motorsStatus();
 }
 
 void mainWindow::assignAddressRequest(const QString &portName, int address) {
-    qDebug()<<"connecting:"<<portName<<"address:"<<address;
+    qDebug()<<"portName:"<<portName<<"address:"<<address;
+
+    m_portName = portName;
     m_controllerAddress = address;
 
     controller.setDeviceAddress((unsigned char)address);
     if(controller.openPort(portName))
         controller.testController();
     else qDebug()<<"port not opened";
+}
+
+void mainWindow::actionFinished(const QVariant &data) {
+    qDebug()<<"action finished:"<<data;
 }

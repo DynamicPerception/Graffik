@@ -17,6 +17,7 @@ joystickModule::joystickModule(QObject *root, QObject *parent) :
 }
 
 void joystickModule::joystickMoved(int x, int y) {
+    qDebug()<<"joystick moved:"<<x<<y;
     const float joystickRange = 64;
     unsigned maxSpeed = 4250 * m_maxMotorSpeed + 750;
 
@@ -27,14 +28,14 @@ void joystickModule::joystickMoved(int x, int y) {
     speedY = std::min(speedY, (float)maxSpeed);
 
     if(!controller.joystickMode()) {
-        controller.setJoystickMode(true);
-        controller.setWatchdogEnable(true);
+        controller.setJoystickMode(true, true);
+        controller.setWatchdogEnable(true, false);
     }
 
-    controller.setContinuousSpeed(2, speedX);
-    controller.setContinuousSpeed(3, speedY);
+    controller.setContinuousSpeed(2, speedX, false);
+    controller.setContinuousSpeed(3, speedY, false);
 
-    if(qAbs(speedX) < 3 && qAbs(speedY) < 3)
+    if(qAbs(speedX) == 0 && qAbs(speedY) == 0)
         controller.setJoystickMode(false);
 }
 
@@ -46,14 +47,14 @@ void joystickModule::sliderMoved(int x) {
     speedX = std::min(speedX, (float)maxSpeed);
 
     if(!controller.joystickMode()) {
-        controller.setJoystickMode(true);
-        controller.setWatchdogEnable(true);
+        controller.setJoystickMode(true, false);
+        controller.setWatchdogEnable(true, false);
     }
 
     controller.setContinuousSpeed(1, speedX);
 
     if(qAbs(speedX) < 3)
-        controller.setJoystickMode(false);
+        controller.setJoystickMode(false, false);
 }
 
 void joystickModule::setStartClicked() {

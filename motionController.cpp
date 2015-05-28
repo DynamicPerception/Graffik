@@ -19,6 +19,7 @@ motionController::motionController(QObject *parent) :
     m_motorsInfo.resize(3);
     m_joystickMode = false;
     m_blocked = false;
+    m_connectionTimer.setInterval(5000);
     m_timer.setInterval(40);
     m_timer.start();
 }
@@ -33,12 +34,41 @@ bool motionController::openPort(const QString &portName) {
     m_portName = portName;
     if(m_serialPort.open(QSerialPort::ReadWrite)) {
         connect(&m_timer, SIGNAL(timeout()), this, SLOT(timerTimeout()));
+        connect(&m_connectionTimer, SIGNAL(timeout()), this, SLOT(connectionError()));
         connect(&m_serialPort, SIGNAL(readyRead()), this, SLOT(serialPortReadyRead()));
         connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialPortError(QSerialPort::SerialPortError)));
         return true;
     }
 
     return false;
+}
+
+void motionController::clearQueue() {
+    m_requestsQueue.clear();
+}
+
+void motionController::requestClosePort() {
+    commandRequest cr;
+    cr.address = 0;
+    cr.subAddress = 0;
+    cr.command = 0;
+
+    QByteArray buff = "__close__";
+    cr.dataLength = buff.size();
+    qstrcpy((char*)cr.data, (char*)buff.data());
+
+    m_requestsQueue.enqueue(cr);
+}
+
+void motionController::setAction(const QString &id) {
+    commandRequest cr;
+    cr.address = 0;
+    cr.subAddress = 0;
+    cr.command = 0;
+    cr.dataLength = id.size();
+    qstrcpy((char*)cr.data, (char*)id.toLatin1().data());
+
+    m_requestsQueue.enqueue(cr);
 }
 
 void motionController::clearPort() {
@@ -49,86 +79,93 @@ void motionController::closePort() {
     m_serialPort.close();
 }
 
-void motionController::testController() {
+void motionController::testController(bool blocking) {
     commandRequest cr;
     cr.address = 1;
     cr.subAddress = 0;
     cr.command = 5;
     cr.dataLength = 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::assignAddress(unsigned char address) {
+void motionController::assignAddress(unsigned char address, bool blocking) {
     commandRequest cr;
     cr.address = 1;
     cr.subAddress = 0;
     cr.command = 4;
     cr.dataLength = 1;
     cr.data[0] = address;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setGraffikModeEnable(bool enable) {
+void motionController::setGraffikModeEnable(bool enable, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 50;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setMotorEnable(unsigned char motor, bool enable) {
+void motionController::setMotorEnable(unsigned char motor, bool enable, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 3;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
     m_motorsInfo[motor - 1].enable = enable;
     if(!enable) m_motorsInfo[motor - 1].moving = false;
 }
 
-void motionController::setCameraEnable(bool enable) {
+void motionController::setCameraEnable(bool enable, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 4;
     cr.command = 2;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
     qDebug()<<"set camera enable:"<<enable;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setFocusWithShutter(bool enable) {
+void motionController::setFocusWithShutter(bool enable, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 4;
     cr.command = 8;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setWatchdogEnable(bool enable) {
+void motionController::setWatchdogEnable(bool enable, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 14;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setShotsInterval(unsigned interval) {
+void motionController::setShotsInterval(unsigned interval, bool blocking) {
     if(m_programInfo.interval == interval)
         return;
 
@@ -138,6 +175,7 @@ void motionController::setShotsInterval(unsigned interval) {
     cr.subAddress = 4;
     cr.command = 10;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_programInfo.interval = interval;
 
     //reorder bytes
@@ -146,12 +184,13 @@ void motionController::setShotsInterval(unsigned interval) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setMotorAcceleration(unsigned char motor, float value) {
+void motionController::setMotorAcceleration(unsigned char motor, float value, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 14;
     cr.dataLength = 4;
+    cr.blocking = blocking;
 
     //reorder bytes
     std::reverse_copy((char*)&value, (char*)&value + 4, cr.data);
@@ -159,7 +198,7 @@ void motionController::setMotorAcceleration(unsigned char motor, float value) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
+void motionController::setLeadInShots(unsigned char motor, unsigned shots, bool blocking) {
     if(m_motorsInfo[motor - 1].leadInShots == shots)
         return;
 
@@ -169,6 +208,7 @@ void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
     cr.subAddress = motor;
     cr.command = 19;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].leadInShots = shots;
 
     //reorder bytes
@@ -177,7 +217,7 @@ void motionController::setLeadInShots(unsigned char motor, unsigned shots) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setLeadOutShots(unsigned char motor, unsigned shots) {
+void motionController::setLeadOutShots(unsigned char motor, unsigned shots, bool blocking) {
     if(m_motorsInfo[motor - 1].leadOutShots == shots)
         return;
 
@@ -187,6 +227,7 @@ void motionController::setLeadOutShots(unsigned char motor, unsigned shots) {
     cr.subAddress = motor;
     cr.command = 25;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].leadOutShots = shots;
 
     //reorder bytes
@@ -195,7 +236,7 @@ void motionController::setLeadOutShots(unsigned char motor, unsigned shots) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setExposureDelay(unsigned short delay) {
+void motionController::setExposureDelay(unsigned short delay, bool blocking) {
     if(m_programInfo.exposureDelay == delay)
         return;
 
@@ -205,6 +246,7 @@ void motionController::setExposureDelay(unsigned short delay) {
     cr.subAddress = 4;
     cr.command = 7;
     cr.dataLength = 2;
+    cr.blocking = blocking;
     m_programInfo.exposureDelay = delay;
 
     //reorder bytes
@@ -213,12 +255,13 @@ void motionController::setExposureDelay(unsigned short delay) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setMaxShots(unsigned short shots) {
+void motionController::setMaxShots(unsigned short shots, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 4;
     cr.command = 6;
     cr.dataLength = 2;
+    cr.blocking = blocking;
 
     //reorder bytes
     std::reverse_copy((char*)&shots, (char*)&shots + 2, cr.data);
@@ -226,7 +269,7 @@ void motionController::setMaxShots(unsigned short shots) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setExposureTime(unsigned time) {
+void motionController::setExposureTime(unsigned time, bool blocking) {
     if(m_programInfo.exposure == time)
         return;
 
@@ -236,6 +279,7 @@ void motionController::setExposureTime(unsigned time) {
     cr.subAddress = 4;
     cr.command = 4;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_programInfo.exposure = time;
 
     //reorder bytes
@@ -244,7 +288,7 @@ void motionController::setExposureTime(unsigned time) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setBacklash(unsigned char motor, unsigned short value) {
+void motionController::setBacklash(unsigned char motor, unsigned short value, bool blocking) {
     if(m_programInfo.backlash == value)
         return;
 
@@ -254,6 +298,7 @@ void motionController::setBacklash(unsigned char motor, unsigned short value) {
     cr.subAddress = motor;
     cr.command = 5;
     cr.dataLength = 2;
+    cr.blocking = blocking;
     m_programInfo.backlash = value;
 
     //reorder bytes
@@ -262,7 +307,7 @@ void motionController::setBacklash(unsigned char motor, unsigned short value) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setFocusTime(unsigned short time) {
+void motionController::setFocusTime(unsigned short time, bool blocking) {
     if(m_programInfo.focusTime == time)
         return;
 
@@ -272,6 +317,7 @@ void motionController::setFocusTime(unsigned short time) {
     cr.subAddress = 4;
     cr.command = 5;
     cr.dataLength = 2;
+    cr.blocking = blocking;
     m_programInfo.focusTime = time;
 
     //reorder bytes
@@ -280,12 +326,13 @@ void motionController::setFocusTime(unsigned short time) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::expose(unsigned time) {
+void motionController::expose(unsigned time, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 4;
     cr.command = 3;
     cr.dataLength = 4;
+    cr.blocking = blocking;
 
     //reorder bytes
     std::reverse_copy((char*)&time, (char*)&time + 4, cr.data);
@@ -293,12 +340,13 @@ void motionController::expose(unsigned time) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setContinuousSpeed(unsigned char motor, float stepsPerSecs) {
+void motionController::setContinuousSpeed(unsigned char motor, float stepsPerSecs, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 13;
     cr.dataLength = 4;
+    cr.blocking = blocking;
 
     //reorder bytes
     stepsPerSecs *= m_motorsInfo[motor - 1].invertDirection ? -1 : 1;
@@ -307,7 +355,7 @@ void motionController::setContinuousSpeed(unsigned char motor, float stepsPerSec
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setMicroStepValue(unsigned char motor, unsigned char value) {
+void motionController::setMicroStepValue(unsigned char motor, unsigned char value, bool blocking) {
     //    if(m_motorsInfo[motor - 1].microstep == value)
     //        return;
 
@@ -318,12 +366,13 @@ void motionController::setMicroStepValue(unsigned char motor, unsigned char valu
     cr.command = 6;
     cr.dataLength = 1;
     cr.data[0] = value;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].microstep = value;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramAcceleration(unsigned char motor, unsigned value) {
+void motionController::setProgramAcceleration(unsigned char motor, unsigned value, bool blocking) {
     if(m_motorsInfo[motor - 1].acceleration == value)
         return;
 
@@ -333,6 +382,7 @@ void motionController::setProgramAcceleration(unsigned char motor, unsigned valu
     cr.subAddress = motor;
     cr.command = 21;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].acceleration = value;
 
     //reorder bytes
@@ -341,7 +391,7 @@ void motionController::setProgramAcceleration(unsigned char motor, unsigned valu
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramDeceleration(unsigned char motor, unsigned value) {
+void motionController::setProgramDeceleration(unsigned char motor, unsigned value, bool blocking) {
     if(m_motorsInfo[motor - 1].deceleration == value)
         return;
 
@@ -351,6 +401,7 @@ void motionController::setProgramDeceleration(unsigned char motor, unsigned valu
     cr.subAddress = motor;
     cr.command = 22;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].deceleration = value;
 
     //reorder bytes
@@ -359,7 +410,7 @@ void motionController::setProgramDeceleration(unsigned char motor, unsigned valu
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setTravelTime(unsigned char motor, unsigned time) {
+void motionController::setTravelTime(unsigned char motor, unsigned time, bool blocking) {
     if(m_motorsInfo[motor - 1].travelTime == time)
         return;
 
@@ -369,6 +420,7 @@ void motionController::setTravelTime(unsigned char motor, unsigned time) {
     cr.subAddress = motor;
     cr.command = 20;
     cr.dataLength = 4;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].travelTime = time;
 
     //reorder bytes
@@ -377,7 +429,7 @@ void motionController::setTravelTime(unsigned char motor, unsigned time) {
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramMode(unsigned char mode) {
+void motionController::setProgramMode(unsigned char mode, bool blocking) {
     if(m_programInfo.programMode == mode)
         return;
 
@@ -388,12 +440,13 @@ void motionController::setProgramMode(unsigned char mode) {
     cr.command = 22;
     cr.dataLength = 1;
     cr.data[0] = mode;
+    cr.blocking = blocking;
     m_programInfo.programMode = mode;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setMaxStepSpeed(unsigned char motor, unsigned short speed) {
+void motionController::setMaxStepSpeed(unsigned char motor, unsigned short speed, bool blocking) {
     if(m_motorsInfo[motor - 1].maxStepSpeed == speed)
         return;
 
@@ -403,6 +456,7 @@ void motionController::setMaxStepSpeed(unsigned char motor, unsigned short speed
     cr.subAddress = motor;
     cr.command = 7;
     cr.dataLength = 2;
+    cr.blocking = blocking;
     m_motorsInfo[motor - 1].maxStepSpeed = speed;
 
     //reorder bytes
@@ -411,36 +465,39 @@ void motionController::setMaxStepSpeed(unsigned char motor, unsigned short speed
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setDirection(unsigned char motor, unsigned char direction) {
+void motionController::setDirection(unsigned char motor, unsigned char direction, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 8;
     cr.dataLength = 1;
     cr.data[0] = direction;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
     m_motorsInfo[motor - 1].direction = direction;
 }
 
-void motionController::setMotorSleep(unsigned char motor, bool sleep) {
+void motionController::setMotorSleep(unsigned char motor, bool sleep, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 2;
     cr.dataLength = 1;
     cr.data[0] = sleep ? 1 : 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::moveMotor(unsigned char motor, unsigned char direction, unsigned steps) {
+void motionController::moveMotor(unsigned char motor, unsigned char direction, unsigned steps, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 15;
     cr.dataLength = 5;
     cr.data[0] = direction;
+    cr.blocking = blocking;
 
     std::reverse_copy((char*)&steps, (char*)&steps + 4, &cr.data[1]);
 
@@ -449,100 +506,109 @@ void motionController::moveMotor(unsigned char motor, unsigned char direction, u
     m_motorsInfo[motor - 1].moving = true;
 }
 
-void motionController::motorPosition(unsigned char motor) {
+void motionController::motorPosition(unsigned char motor, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 106;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
     m_motorsInfo[motor - 1].moving = false;
 }
 
-void motionController::stopMotor(unsigned char motor) {
+void motionController::stopMotor(unsigned char motor, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 4;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
     m_motorsInfo[motor - 1].moving = false;
 }
 
-void motionController::setEasingMode(unsigned char motor, unsigned char mode) {
+void motionController::setEasingMode(unsigned char motor, unsigned char mode, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 18;
     cr.dataLength = 1;
     cr.data[0] = mode;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramStartPoint(unsigned char motor, unsigned stepPosition) {
+void motionController::setProgramStartPoint(unsigned char motor, unsigned stepPosition, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 16;
     cr.dataLength = 4;
+    cr.blocking = blocking;
 
     std::reverse_copy((char*)&stepPosition, (char*)&stepPosition + 4, cr.data);
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramStartPoint() {
+void motionController::setProgramStartPoint(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 26;
     cr.dataLength = 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramStopPoint(unsigned char motor, unsigned stepPosition) {
+void motionController::setProgramStopPoint(unsigned char motor, unsigned stepPosition, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 17;
     cr.dataLength = 4;
+    cr.blocking = blocking;
 
     std::reverse_copy((char*)&stepPosition, (char*)&stepPosition + 4, cr.data);
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setProgramStopPoint() {
+void motionController::setProgramStopPoint(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 27;
     cr.dataLength = 0;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::sendMotorToStartPoint(unsigned char motor) {
+void motionController::sendMotorToStartPoint(unsigned char motor, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 23;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::sendMotorToStopPoint(unsigned char motor) {
+void motionController::sendMotorToStopPoint(unsigned char motor, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 24;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setPingPongFlag(bool enable) {
+void motionController::setPingPongFlag(bool enable, bool blocking) {
     if(m_programInfo.pingPongFlag == enable)
         return;
 
@@ -553,143 +619,175 @@ void motionController::setPingPongFlag(bool enable) {
     cr.command = 24;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
     m_programInfo.pingPongFlag = enable;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setJoystickMode(bool enable) {
+void motionController::setJoystickMode(bool enable, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 23;
     cr.dataLength = 1;
     cr.data[0] = enable ? 1 : 0;
+    cr.blocking = blocking;
     m_joystickMode = enable;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::startPlannedMove() {
+void motionController::startPlannedMove(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 2;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::stopPlannedMove() {
+void motionController::stopPlannedMove(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 4;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::pausePlannedMove() {
+void motionController::pausePlannedMove(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 3;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::firmwareVersion() {
+void motionController::firmwareVersion(bool blocking) {
     commandRequest cr;
-    cr.blocking = true;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 100;
+    cr.blocking = blocking;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::shotsInterval() {
+void motionController::shotsInterval(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 4;
     cr.command = 108;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::motorsStatus() {
+void motionController::motorsStatus(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 124;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::motorRunning(unsigned char motor) {
+void motionController::motorRunning(unsigned char motor, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 107;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::motorsRunning() {
+void motionController::motorsRunning(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 128;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
 void motionController::setDeviceAddress(unsigned char address) {
     m_deviceAddress = address;
+    qDebug()<<"set current controller address:"<<address;
 }
 
-void motionController::validateMotor(unsigned char motor) {
+void motionController::validateMotor(unsigned char motor, bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = motor;
     cr.command = 118;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::powerSaveStatus() {
+void motionController::powerSaveStatus(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 130;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::validateMotors() {
+void motionController::validateMotors(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 129;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
-void motionController::programProgress() {
+void motionController::programProgress(bool blocking) {
     commandRequest cr;
     cr.address = m_deviceAddress;
     cr.subAddress = 0;
     cr.command = 123;
+    cr.blocking = blocking;
 
     m_requestsQueue.enqueue(cr);
 }
 
 void motionController::invertMotor(unsigned char motor, bool yes) {
-    m_motorsInfo[motor - 1].invertDirection = yes;
+  m_motorsInfo[motor - 1].invertDirection = yes;
 }
 
 void motionController::processCommands() {
     if(!m_requestsQueue.empty()) {
         commandRequest cr = m_requestsQueue.dequeue();
+        if(cr.address == 0 && cr.subAddress == 0 &&
+           cr.command == 0)
+        {
+          QByteArray buff((char*)cr.data, cr.dataLength);
+          if(buff == "__close__") {
+              m_blocked = false;
+              m_repliesBuffer.clear();
+              m_serialPort.close();
+              //maybe lets not do that?
+              m_requestsQueue.clear();
+          } else {
+              emit actionFinished(QString(buff));
+          }
+
+          return;
+        }
+
         m_serialPort.setProperty("command", cr.command);
         m_serialPort.setProperty("subAddress", cr.subAddress);
         m_serialPort.setProperty("address", cr.address);
@@ -707,6 +805,7 @@ void motionController::replyEmiter(unsigned char address, unsigned char subAddre
                                    unsigned char command, const QByteArray &data)
 {
     if(address == 1) {
+        qDebug()<<"test controller finished";
         switch(command) {
         case 5: emit testControllerFinished(data); break;
         }
@@ -756,6 +855,7 @@ void motionController::serialPortReadyRead() {
             unsigned char command = m_serialPort.property("command").toUInt();
             unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
             unsigned char address = m_serialPort.property("address").toUInt();
+
             qDebug()<<"processed | address:"<<address<<"subAddress:"<<subAddress<<"command:"<<command<<"data:"<<m_repliesBuffer.left(10 + dataSize).toHex();
             replyEmiter(address, subAddress, command, reply);
 
@@ -775,6 +875,15 @@ void motionController::serialPortError(QSerialPort::SerialPortError err) {
 void motionController::timerTimeout() {
     if(m_serialPort.isOpen() && !m_blocked)
         processCommands();
+//    else if(m_requestsQueue.count() > 0)
+//      qDebug()<<"shit:"<<m_requestsQueue.first();
+}
+
+void motionController::connectionError() {
+    m_repliesBuffer.clear();
+    m_serialPort.close();
+    m_blocked = false;
+    emit disconnected();
 }
 
 

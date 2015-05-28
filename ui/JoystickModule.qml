@@ -124,7 +124,7 @@ Item {
                     height: 20
                     font.pixelSize: 16
                     verticalAlignment: Text.AlignVCenter
-                    text: qsTr("Address")
+                    text: qsTr("Address %1").arg(window.currentControllerAddress)
                 }
 
                 Components.StandardButton {
@@ -133,6 +133,14 @@ Item {
                     width: 80
                     fontSize: 14
                     text: qsTr("Change")
+                    onClicked: {
+                      if(window.currentControllerAddress >= window.controllersCount + 2) {
+                        window.currentControllerAddress = 3
+                        controller.setDeviceAddress(window.currentControllerAddress)
+                      } else {
+                        controller.setDeviceAddress(++window.currentControllerAddress)
+                      }
+                    }
                 }
             }
 
