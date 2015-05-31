@@ -15,12 +15,8 @@ motorsModule::motorsModule(QObject *root, QObject *parent) :
     connect(&controller, SIGNAL(settingEndPointFinished(QByteArray)), this, SLOT(validateProgram()));
     connect(m_pRootItem, SIGNAL(validateRequest()), this, SLOT(validateProgram()));
     connect(m_pRootItem, SIGNAL(backlash(int,int)), this, SLOT(backlash(int,int)));
-    connect(m_pRootItem, SIGNAL(powerSaveMode(int,bool)), this, SLOT(powerSaveMode(int,bool)));
-    connect(m_pRootItem, SIGNAL(invertDirection(int,bool)), this, SLOT(invertDirection(int,bool)));
     connect(m_pRootItem, SIGNAL(stepResolution(int,int)), this, SLOT(stepResolution(int,int)));
     connect(m_pRootItem, SIGNAL(maxStepRate(int,int)), this, SLOT(maxStepRate(int,int)));
-    connect(m_pRootItem, SIGNAL(easingType(int,int)), this, SLOT(easingType(int,int)));
-    connect(m_pRootItem, SIGNAL(clearClicked(int)), this, SLOT(clearClicked(int)));
     connect(m_pRootItem, SIGNAL(motionChanged(int,qreal,qreal,qreal,qreal)), this,
             SLOT(motionChanged(int,qreal,qreal,qreal,qreal)));
 }
@@ -88,7 +84,7 @@ void motorsModule::validateProgram(int motor) {
     // Changing input other than graph points
     else {
         for(int i = 1; i <= 3; ++i) {
-            motion m = m_motions[i - 1];            
+            motion m = m_motions[i - 1];
 
             unsigned leadIn = unsigned(qRound(length * m.leadIn));
             unsigned leadOut = unsigned(qRound(length * m.leadOut));
@@ -109,16 +105,6 @@ void motorsModule::validateProgram(int motor) {
     }
 }
 
-void motorsModule::powerSaveMode(int motor, bool enable) {
-    qDebug()<<"set power save mode";
-    controller.setMotorSleep((unsigned char)motor, enable);
-}
-
-void motorsModule::invertDirection(int motor, bool enable) {
-    qDebug()<<"invert direction:"<<motor<<enable;
-    controller.invertMotor((unsigned char)motor, enable);
-}
-
 void motorsModule::stepResolution(int motor, int resolution) {
     static unsigned char resolutions[3] = {4, 8, 16};
     controller.setMicroStepValue((unsigned char)motor, resolutions[resolution]);
@@ -128,16 +114,8 @@ void motorsModule::maxStepRate(int motor, int rate) {
     controller.setMaxStepSpeed((unsigned char)motor, (unsigned short)rate);
 }
 
-void motorsModule::easingType(int motor, int easing) {
-    controller.setEasingMode((unsigned char)motor, (unsigned char)easing);
-}
-
 void motorsModule::backlash(int motor, int value) {
     controller.setBacklash((unsigned char)motor, (unsigned short)value);
-}
-
-void motorsModule::clearClicked(int motor) {
-
 }
 
 void motorsModule::motionChanged(int motor, qreal p1, qreal p2, qreal p3, qreal p4) {

@@ -96,7 +96,6 @@ public:
     void assignAddress(unsigned char address, bool blocking = false);
     void setGraffikModeEnable(bool enable, bool blocking = true);
     void setMotorEnable(unsigned char motor, bool enable, bool blocking = true);
-    void setCameraEnable(bool enable, bool blocking = true);
     void setFocusWithShutter(bool enable, bool blocking = true);
     void setWatchdogEnable(bool enable, bool blocking = true);
     void setShotsInterval(unsigned interval, bool blocking = true);
@@ -106,22 +105,18 @@ public:
     void setExposureDelay(unsigned short delay, bool blocking = true);
     void setMaxShots(unsigned short shots, bool blocking = true);
     void setExposureTime(unsigned time, bool blocking = true);
-    void setBacklash(unsigned char motor, unsigned short value, bool blocking = true);
     void setFocusTime(unsigned short time, bool blocking = true);
     void expose(unsigned time, bool blocking = true);
     void setContinuousSpeed(unsigned char motor, float stepsPerSecs, bool blocking = true);
-    void setMicroStepValue(unsigned char motor, unsigned char value, bool blocking = true);
     void setProgramAcceleration(unsigned char motor, unsigned value, bool blocking = true);
     void setProgramDeceleration(unsigned char motor, unsigned value, bool blocking = true);
     void setTravelTime(unsigned char motor, unsigned time, bool blocking = true);
     void setProgramMode(unsigned char mode, bool blocking = true);
     void setMaxStepSpeed(unsigned char motor, unsigned short speed, bool blocking = true);
     void setDirection(unsigned char motor, unsigned char direction, bool blocking = true);
-    void setMotorSleep(unsigned char motor, bool sleep, bool blocking = true);
     void moveMotor(unsigned char motor, unsigned char direction, unsigned steps = 0, bool blocking = true);
     void motorPosition(unsigned char motor, bool blocking = true);
     void stopMotor(unsigned char motor, bool blocking = true);
-    void setEasingMode(unsigned char motor, unsigned char mode, bool blocking = true);
     void setProgramStartPoint(unsigned char motor, unsigned stepPosition, bool blocking = true);
     void setProgramStartPoint(bool blocking = true);
     void setProgramStopPoint(unsigned char motor, unsigned stepPosition, bool blocking = true);
@@ -142,15 +137,31 @@ public:
     void powerSaveStatus(bool blocking = true);
     void validateMotors(bool blocking = true);
     void programProgress(bool blocking = true);
-    void invertMotor(unsigned char motor, bool yes);
-    void setAction(const QString &id);
-    Q_INVOKABLE void setDeviceAddress(unsigned char address);
 
-    unsigned char motorDirection(unsigned char motor) const { return m_motorsInfo[motor - 1].direction; }
-    unsigned char motorMicrostep(unsigned char motor) const { return m_motorsInfo[motor - 1].microstep; }
-    bool isMotorEnabled(unsigned char motor) const { return m_motorsInfo[motor - 1].enable; }
-    bool isMotorMoving(unsigned char motor) const { return m_motorsInfo[motor - 1].moving; }
+    Q_INVOKABLE void setAction(const QString &id);
+    Q_INVOKABLE void setDeviceAddress(unsigned char address);
+    Q_INVOKABLE void setCameraEnable(unsigned char address, bool enable, bool blocking = true);
+    Q_INVOKABLE void setCameraEnable(bool enable, bool blocking = true);
+    Q_INVOKABLE void setEasingMode(unsigned char address, unsigned char motor, unsigned char mode, bool blocking = true);
+    Q_INVOKABLE void setEasingMode(unsigned char motor, unsigned char mode, bool blocking = true);
+    Q_INVOKABLE void setMicroStepValue(unsigned char address, unsigned char motor, unsigned char value, bool blocking = true);
+    Q_INVOKABLE void setMicroStepValue(unsigned char motor, unsigned char value, bool blocking = true);
+    Q_INVOKABLE void setBacklash(unsigned char address, unsigned char motor, unsigned short value, bool blocking = true);
+    Q_INVOKABLE void setBacklash(unsigned char motor, unsigned short value, bool blocking = true);
+    Q_INVOKABLE void setMotorSleep(unsigned char address, unsigned char motor, bool sleep, bool blocking = true);
+    Q_INVOKABLE void invertMotorDirection(unsigned char address, unsigned char motor, bool yes);
+
+    unsigned char motorDirection(unsigned char address, unsigned char motor) const { return m_motorsInfo[address][motor - 1].direction; }
+    unsigned char motorMicrostep(unsigned char address, unsigned char motor) const { return m_motorsInfo[address][motor - 1].microstep; }
+    unsigned char motorDirection(unsigned char motor) { return m_motorsInfo[m_deviceAddress][motor - 1].direction; }
+    unsigned char motorMicrostep(unsigned char motor) { return m_motorsInfo[m_deviceAddress][motor - 1].microstep; }
+    bool isMotorEnabled(unsigned char address, unsigned char motor) const { return m_motorsInfo[address][motor - 1].enable; }
+    bool isMotorMoving(unsigned char address, unsigned char motor) const { return m_motorsInfo[address][motor - 1].moving; }
+    bool isMotorEnabled(unsigned char motor) const { return m_motorsInfo[m_deviceAddress][motor - 1].enable; }
+    bool isMotorMoving(unsigned char motor) const { return m_motorsInfo[m_deviceAddress][motor - 1].moving; }
+
     bool joystickMode() const { return m_joystickMode; }
+    unsigned char currentDeviceAddress() const { return m_deviceAddress; }
 
 private:
     explicit motionController(QObject *parent = 0);
@@ -163,7 +174,7 @@ private:
     bool m_joystickMode;
     unsigned char m_deviceAddress;
 
-    QVector<motorInfo> m_motorsInfo;
+    motorInfo m_motorsInfo[255][3];
     programInfo m_programInfo;
     QQueue<commandRequest> m_requestsQueue;
     void processCommands();

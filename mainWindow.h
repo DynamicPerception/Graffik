@@ -37,9 +37,7 @@ private slots:
     void goToProgramStartClicked();
     void allStopClicked();
     void portsRescanClicked();
-    void checkMotorAttachmentClicked();
     void connectToDevices();
-    void setCameraEnabled(bool enable);
     void motorsStatusFinished(const QByteArray &data);
     void movementCheckRequest();
     void testControllerFinished(const QByteArray &data);
@@ -48,7 +46,6 @@ private slots:
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
     void assignAddressRequest(const QString &portName, int address);
-    void actionFinished(const QVariant &data);
 };
 
 #endif // MAINWINDOW_H

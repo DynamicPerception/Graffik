@@ -46,13 +46,9 @@ private:
 
 private slots:
     void validateProgram(int motor = -1);
-    void powerSaveMode(int motor, bool enable);
-    void invertDirection(int motor, bool enable);
     void stepResolution(int motor, int resolution);
     void maxStepRate(int motor, int rate);
-    void easingType(int motor, int easing);
     void backlash(int motor, int value);
-    void clearClicked(int motor);
     void motionChanged(int motor, qreal p1, qreal p2, qreal p3, qreal p4);
     void validateMotorFinished(const QByteArray &data);
     void validateMotorsFinished(const QByteArray &data);

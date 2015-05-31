@@ -17,7 +17,6 @@ joystickModule::joystickModule(QObject *root, QObject *parent) :
 }
 
 void joystickModule::joystickMoved(int x, int y) {
-    qDebug()<<"joystick moved:"<<x<<y;
     const float joystickRange = 64;
     unsigned maxSpeed = 4250 * m_maxMotorSpeed + 750;
 

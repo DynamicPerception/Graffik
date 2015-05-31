@@ -25,10 +25,8 @@ mainWindow::mainWindow(QObject *parent)
     connect(&controller, SIGNAL(motorsRunningFinished(QByteArray)), this, SLOT(movementCheckFinished(QByteArray)));
     connect(&controller, SIGNAL(programProgressFinished(QByteArray)), this, SLOT(programProgressFinished(QByteArray)));
     connect(&controller, SIGNAL(testControllerFinished(QByteArray)), this, SLOT(testControllerFinished(QByteArray)));
-    connect(&controller, SIGNAL(actionFinished(QVariant)), this, SLOT(actionFinished(QVariant)));
     connect(m_pRootItem, SIGNAL(connectToDevices()), this, SLOT(connectToDevices()));
     connect(m_pRootItem, SIGNAL(assignAddressRequest(QString,int)), this, SLOT(assignAddressRequest(QString,int)));
-    connect(m_pRootItem, SIGNAL(setCameraEnabled(bool)), this, SLOT(setCameraEnabled(bool)));
     connect(m_pRootItem, SIGNAL(goToProgramStartClicked()), this, SLOT(goToProgramStartClicked()));
     connect(m_pRootItem, SIGNAL(allStopClicked()), this, SLOT(allStopClicked()));
     connect(m_pRootItem, SIGNAL(startProgramClicked()), this, SLOT(startProgramClicked()));
@@ -231,10 +229,6 @@ void mainWindow::connectToDevices() {
     controller.setAction("init");
 }
 
-void mainWindow::setCameraEnabled(bool enable) {
-    controller.setCameraEnable(enable);
-}
-
 void mainWindow::motorsStatusFinished(const QByteArray &data) {
     if(!data.size()) {
         qDebug()<<"motor attachment data is empty";
@@ -329,8 +323,4 @@ void mainWindow::assignAddressRequest(const QString &portName, int address) {
     if(controller.openPort(portName))
         controller.testController();
     else qDebug()<<"port not opened";
-}
-
-void mainWindow::actionFinished(const QVariant &data) {
-    qDebug()<<"action finished:"<<data;
 }

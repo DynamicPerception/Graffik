@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>ui/main.qml</file>
         <file>ui/DesktopTemplate.qml</file>
+        <file>ui/Utility.js</file>
     </qresource>
     <qresource prefix="/components">
         <file>ui/MainMenu.qml</file>
