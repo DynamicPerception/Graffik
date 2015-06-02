@@ -714,6 +714,16 @@ void motionController::motorsStatus(unsigned char address, bool blocking) {
   m_requestsQueue.enqueue(cr);
 }
 
+void motionController::motorsStatus(bool blocking) {
+  commandRequest cr;
+  cr.address = m_deviceAddress;
+  cr.subAddress = 0;
+  cr.command = 124;
+  cr.blocking = blocking;
+
+  m_requestsQueue.enqueue(cr);
+}
+
 void motionController::motorRunning(unsigned char motor, bool blocking) {
   commandRequest cr;
   cr.address = m_deviceAddress;

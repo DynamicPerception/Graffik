@@ -130,6 +130,7 @@ public:
     void pausePlannedMove(bool blocking = true);
     void firmwareVersion(bool blocking = true);
     void shotsInterval(bool blocking = true);
+    void motorsStatus(unsigned char address, bool blocking = true);
     void motorsStatus(bool blocking = true);
     void motorRunning(unsigned char motor, bool blocking = true);
     void motorsRunning(bool blocking = true);

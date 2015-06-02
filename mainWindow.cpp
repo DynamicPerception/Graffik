@@ -33,7 +33,6 @@ mainWindow::mainWindow(QObject *parent)
     connect(m_pRootItem, SIGNAL(stopProgramClicked()), this, SLOT(stopProgramClicked()));
     connect(m_pRootItem, SIGNAL(pauseProgramClicked()), this, SLOT(pauseProgramClicked()));
     connect(m_pRootItem, SIGNAL(portsRescanClicked()), this, SLOT(portsRescanClicked()));
-    connect(m_pRootItem, SIGNAL(checkMotorAttachmentClicked()), this, SLOT(checkMotorAttachmentClicked()));
     connect(m_pRootItem, SIGNAL(connectToPortClicked(QString,QString)), this, SLOT(connectToPortClicked(QString,QString)));
     connect(m_pRootItem, SIGNAL(closePort()), &controller, SLOT(closePort()));
 
@@ -206,10 +205,10 @@ void mainWindow::portsRescanClicked() {
     }
 }
 
-void mainWindow::checkMotorAttachmentClicked() {
-    qDebug()<<"check motor attachment clicked";
-    controller.motorsStatus();
-}
+//void mainWindow::checkMotorAttachmentClicked() {
+//    qDebug()<<"check motor attachment clicked";
+//    controller.motorsStatus();
+//}
 
 void mainWindow::connectToDevices() {
     if(!controller.openPort(m_portName)) {
