@@ -72,12 +72,44 @@ Item {
         anchors.margins: 10
         spacing: 20
 
+        ListModel {
+          id: motorsModel
+        }
+
+        Connections {
+          target: controller
+          function appendMotor(address, port) {
+            motorsModel.append({
+              "motorAddress" : address,
+              "motorPort" : port,
+              "motorValid" : true,
+              "motorPowerSave" : true
+            })
+          }
+
+          function removeMotors() {
+            motorsModel.clear()
+          }
+
+          onMotorStatusFinished: {
+            console.log("motor status finished")
+            var toRemove = new Array()
+            var found = new Array()
+            //var ret = data[1]
+            var ret = 7
+
+            if(ret & 1 > 0) appendMotor(address, 1)
+            if(ret & 2 > 0) appendMotor(address, 2)
+            if(ret & 4 > 0) appendMotor(address, 3)
+          }
+        }
+
         Repeater {
           id: motorsRepeater
           model: motorsModel
+
           delegate: Modules.MotorModule {
             width: column.width
-            visible: window.motor1Available
             z: motorsRepeater.count - index
           }
         }

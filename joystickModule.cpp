@@ -10,8 +10,6 @@ joystickModule::joystickModule(QObject *root, QObject *parent) :
     m_maxMotorSpeed = 1;
     connect(m_pRootItem, SIGNAL(joystickMoved(int,int)), this, SLOT(joystickMoved(int,int)));
     connect(m_pRootItem, SIGNAL(sliderMoved(int)), this, SLOT(sliderMoved(int)));
-    connect(m_pRootItem, SIGNAL(setStartClicked()), this, SLOT(setStartClicked()));
-    connect(m_pRootItem, SIGNAL(setEndClicked()), this, SLOT(setEndClicked()));
     connect(m_pRootItem, SIGNAL(dampingChanged(qreal)), this, SLOT(dampingChanged(qreal)));
     connect(m_pRootItem, SIGNAL(maxJoystickSpeedChanged(qreal)), this, SLOT(maxJoystickSpeedChanged(qreal)));
 }
@@ -54,14 +52,6 @@ void joystickModule::sliderMoved(int x) {
 
     if(qAbs(speedX) < 3)
         controller.setJoystickMode(false, false);
-}
-
-void joystickModule::setStartClicked() {
-    controller.setProgramStartPoint();
-}
-
-void joystickModule::setEndClicked() {
-    controller.setProgramStopPoint();
 }
 
 void joystickModule::maxJoystickSpeedChanged(qreal pos) {

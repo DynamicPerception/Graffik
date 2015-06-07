@@ -127,7 +127,7 @@ void motionController::setMotorEnable(unsigned char motor, bool enable, bool blo
   if(!enable) m_motorsInfo[m_deviceAddress][motor - 1].moving = false;
 }
 
-void motionController::setCameraEnable(unsigned char address, bool enable, bool blocking) {
+void motionController::enableCamera(unsigned char address, bool enable, bool blocking) {
   commandRequest cr;
   cr.address = address;
   cr.subAddress = 4;
@@ -140,8 +140,8 @@ void motionController::setCameraEnable(unsigned char address, bool enable, bool 
   m_requestsQueue.enqueue(cr);
 }
 
-void motionController::setCameraEnable(bool enable, bool blocking) {
-  setCameraEnable(m_deviceAddress, enable, blocking);
+void motionController::enableCamera(bool enable, bool blocking) {
+  enableCamera(m_deviceAddress, enable, blocking);
 }
 
 void motionController::setFocusWithShutter(bool enable, bool blocking) {
@@ -769,14 +769,18 @@ void motionController::powerSaveStatus(bool blocking) {
   m_requestsQueue.enqueue(cr);
 }
 
-void motionController::validateMotors(bool blocking) {
+void motionController::validateMotors(unsigned char address, bool blocking) {
   commandRequest cr;
-  cr.address = m_deviceAddress;
+  cr.address = address;
   cr.subAddress = 0;
   cr.command = 129;
   cr.blocking = blocking;
 
   m_requestsQueue.enqueue(cr);
+}
+
+void motionController::validateMotors(bool blocking) {
+  validateMotors(m_deviceAddress, blocking);
 }
 
 void motionController::programProgress(bool blocking) {
@@ -837,7 +841,7 @@ void motionController::replyEmiter(unsigned char address, unsigned char subAddre
     } else if(subAddress == 0) {
       switch(command) {
         case 100: emit firmwareVersionFinished(data); break;
-        case 124: emit motorStatusFinished(data); break;
+        case 124: emit motorStatusFinished(address, data); break;
         case 123: emit programProgressFinished(data); break;
         case 129: emit validateMotorsFinished(data); break;
         case 130: emit powerSaveStatusFinished(data); break;

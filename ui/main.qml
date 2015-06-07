@@ -19,23 +19,6 @@ ApplicationWindow {
         programStatus === 3 - going to start position
     */
 
-  function appendMotor(address, port) {
-    motorsModel.append({
-      "motorAddress" : address,
-      "motorPort" : port,
-      "motorValid" : true,
-      "motorPowerSave" : true
-    })
-  }
-
-  function removeMotors() {
-    motorsModel.clear()
-  }
-
-  ListModel {
-    id: motorsModel
-  }
-
   property string portName: ""
   property int programStatus: 0
   property int programProgress: 0
@@ -54,18 +37,6 @@ ApplicationWindow {
   property int shootingMinutes: 20
   property int shootingSecs: 00
   property var availablePorts
-
-  property bool motor1Available: false
-  property bool motor2Available: false
-  property bool motor3Available: false
-
-  property bool motor1Valid: true
-  property bool motor2Valid: true
-  property bool motor3Valid: true
-
-  property bool motor1PowerSave: false
-  property bool motor2PowerSave: false
-  property bool motor3PowerSave: false
   property bool motorsOnStartPositions: false
 
   property real focusTime: 0.6
@@ -76,28 +47,21 @@ ApplicationWindow {
   property int programMode: 0
   property int videoFrames: 300
 
-  signal allStopClicked()
   signal startProgramClicked()
   signal stopProgramClicked()
   signal pauseProgramClicked()
   signal goToProgramStartClicked()
 
-  signal stepResolution(int motor, int resolution)
-  signal maxStepRate(int motor, int rate)
-  signal backlash(int motor, int value)
-  signal easingType(int address, int motor, int easing)
   signal clearClicked(int motor)
   signal joystickMoved(int xpos, int ypos)
   signal dampingChanged(real pos)
   signal maxJoystickSpeedChanged(real pos)
   signal sliderMoved(int xpos)
-  signal setStartClicked()
-  signal setEndClicked()
-  signal motionChanged(int motor, real p1, real p2, real p3, real p4)
+  signal motionChanged(int address, int motor, real p1, real p2, real p3, real p4)
   signal connectToPortClicked(string port, string address)
   signal portsRescanClicked()
   signal checkMotorAttachmentClicked()
-  signal validateRequest()
+  signal validateRequest(int address)
   signal closePort()
   signal assignAddressRequest(string port, int address)
   signal connectToDevices()

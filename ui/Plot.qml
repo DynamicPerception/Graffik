@@ -4,13 +4,7 @@ import QtQuick.Controls 1.2
 Item {
     id: plot
     property int easing: 2
-    property bool error: {
-        switch(box.port) {
-        case 1: return !window.motor1Valid
-        case 2: return !window.motor2Valid
-        case 3: return !window.motor3Valid
-        }
-    }
+    property bool error: false
 
     onErrorChanged: canvas.requestPaint()
     onEasingChanged: canvas.requestPaint()
@@ -36,7 +30,7 @@ Item {
         var p2 = (point2.x + 5) / w
         var p3 = (point3.x + 5) / w
         var p4 = (point4.x + 5) / w
-        window.motionChanged(box.port, p1, p2, p3, p4)
+        window.motionChanged(deviceAddress, motorPort, p1, p2, p3, p4)
     }
 
     Image {

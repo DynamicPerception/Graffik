@@ -65,6 +65,15 @@ Components.Box {
     anchors.leftMargin: 10
     anchors.rightMargin: 10
     height: 183
+
+    Connections {
+      target: controller
+      onValidateMotorsFinished: {
+        if(address === deviceAddress) {
+
+        }
+      }
+    }
   }
 
   Item {

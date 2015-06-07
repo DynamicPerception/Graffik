@@ -35,10 +35,8 @@ private slots:
     void stopProgramClicked();
     void pauseProgramClicked();
     void goToProgramStartClicked();
-    void allStopClicked();
     void portsRescanClicked();
     void connectToDevices();
-    void motorsStatusFinished(const QByteArray &data);
     void movementCheckRequest();
     void testControllerFinished(const QByteArray &data);
     void movementCheckFinished(const QByteArray &data);

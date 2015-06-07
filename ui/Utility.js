@@ -2,7 +2,7 @@ function initController(address) {
   controller.setGraffikModeEnable(true);
   controller.setJoystickMode(false);
   controller.setWatchdogEnable(false);
-  controller.setCameraEnable(true);
+  controller.enableCamera(true);
 
   controller.setMotorEnable(1, true);
   controller.setMotorEnable(2, true);

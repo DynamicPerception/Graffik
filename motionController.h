@@ -118,9 +118,7 @@ public:
     void motorPosition(unsigned char motor, bool blocking = true);
     void stopMotor(unsigned char motor, bool blocking = true);
     void setProgramStartPoint(unsigned char motor, unsigned stepPosition, bool blocking = true);
-    void setProgramStartPoint(bool blocking = true);
     void setProgramStopPoint(unsigned char motor, unsigned stepPosition, bool blocking = true);
-    void setProgramStopPoint(bool blocking = true);
     void sendMotorToStartPoint(unsigned char motor, bool blocking = true);
     void sendMotorToStopPoint(unsigned char motor, bool blocking = true);
     void setPingPongFlag(bool enable, bool blocking = true);
@@ -136,13 +134,16 @@ public:
     void motorsRunning(bool blocking = true);
     void validateMotor(unsigned char motor, bool blocking = true);
     void powerSaveStatus(bool blocking = true);
+    void validateMotors(unsigned char address, bool blocking = true);
     void validateMotors(bool blocking = true);
     void programProgress(bool blocking = true);
 
+    Q_INVOKABLE void setProgramStartPoint(bool blocking = true);
+    Q_INVOKABLE void setProgramStopPoint(bool blocking = true);
     Q_INVOKABLE void setAction(const QString &id);
     Q_INVOKABLE void setDeviceAddress(unsigned char address);
-    Q_INVOKABLE void setCameraEnable(unsigned char address, bool enable, bool blocking = true);
-    Q_INVOKABLE void setCameraEnable(bool enable, bool blocking = true);
+    Q_INVOKABLE void enableCamera(unsigned char address, bool enable, bool blocking = true);
+    Q_INVOKABLE void enableCamera(bool enable, bool blocking = true);
     Q_INVOKABLE void setEasingMode(unsigned char address, unsigned char motor, unsigned char mode, bool blocking = true);
     Q_INVOKABLE void setEasingMode(unsigned char motor, unsigned char mode, bool blocking = true);
     Q_INVOKABLE void setMicroStepValue(unsigned char address, unsigned char motor, unsigned char value, bool blocking = true);
@@ -194,11 +195,11 @@ public slots:
 
 signals:
     void firmwareVersionFinished(const QByteArray &data);
-    void motorStatusFinished(const QByteArray &data);
+    void motorStatusFinished(const QVariant &address, const QVariant &data);
     void motorPositionFinished(const QByteArray &data);
     void motorRunningFinished(const QByteArray &data);
     void validateMotorFinished(const QByteArray &data);
-    void validateMotorsFinished(const QByteArray &data);
+    void validateMotorsFinished(const QVariant &data);
     void programProgressFinished(const QByteArray &data);
     void powerSaveStatusFinished(const QByteArray &data);
     void motorsRunningFinished(const QByteArray &data);

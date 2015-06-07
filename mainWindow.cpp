@@ -21,14 +21,12 @@ mainWindow::mainWindow(QObject *parent)
 
     connect(&controller, SIGNAL(powerSaveStatusFinished(QByteArray)), this, SLOT(powerSaveStatusFinished(QByteArray)));
     connect(&controller, SIGNAL(firmwareVersionFinished(QByteArray)), this, SLOT(controllerConnected()));
-    connect(&controller, SIGNAL(motorStatusFinished(QByteArray)), this, SLOT(motorsStatusFinished(QByteArray)));
     connect(&controller, SIGNAL(motorsRunningFinished(QByteArray)), this, SLOT(movementCheckFinished(QByteArray)));
     connect(&controller, SIGNAL(programProgressFinished(QByteArray)), this, SLOT(programProgressFinished(QByteArray)));
     connect(&controller, SIGNAL(testControllerFinished(QByteArray)), this, SLOT(testControllerFinished(QByteArray)));
     connect(m_pRootItem, SIGNAL(connectToDevices()), this, SLOT(connectToDevices()));
     connect(m_pRootItem, SIGNAL(assignAddressRequest(QString,int)), this, SLOT(assignAddressRequest(QString,int)));
     connect(m_pRootItem, SIGNAL(goToProgramStartClicked()), this, SLOT(goToProgramStartClicked()));
-    connect(m_pRootItem, SIGNAL(allStopClicked()), this, SLOT(allStopClicked()));
     connect(m_pRootItem, SIGNAL(startProgramClicked()), this, SLOT(startProgramClicked()));
     connect(m_pRootItem, SIGNAL(stopProgramClicked()), this, SLOT(stopProgramClicked()));
     connect(m_pRootItem, SIGNAL(pauseProgramClicked()), this, SLOT(pauseProgramClicked()));
@@ -48,7 +46,7 @@ void mainWindow::initController() {
     controller.setGraffikModeEnable(true);
     controller.setJoystickMode(false);
     controller.setWatchdogEnable(false);
-    controller.setCameraEnable(true);
+    controller.enableCamera(true);
 
     controller.setMotorEnable(1, true);
     controller.setMotorEnable(2, true);
@@ -131,7 +129,7 @@ void mainWindow::startProgramClicked() {
 
     // Assign motor parameters
     for(unsigned char i = 1; i <= 3; ++i) {
-        motion m = m_pMotorsModule->motorMotion(i);
+        motion m = m_pMotorsModule->motorMotion(controller.currentDeviceAddress(), i);
 
         unsigned leadIn = unsigned(qRound(length * m.leadIn));
         unsigned leadOut = unsigned(qRound(length * m.leadOut));
@@ -153,7 +151,6 @@ void mainWindow::startProgramClicked() {
 }
 
 void mainWindow::stopProgramClicked() {
-    qDebug()<<"stop planned move";
     m_progressTimer.stop();
     m_movementTimer.stop();
     m_pRootItem->setProperty("programStatus", 0);
@@ -166,7 +163,6 @@ void mainWindow::stopProgramClicked() {
 }
 
 void mainWindow::pauseProgramClicked() {
-    qDebug()<<"pause planned move";
     m_progressTimer.stop();
     m_pRootItem->setProperty("programStatus", 2);
     controller.pausePlannedMove();
@@ -183,19 +179,6 @@ void mainWindow::goToProgramStartClicked() {
     m_movementTimer.start();
 }
 
-void mainWindow::allStopClicked() {
-    m_progressTimer.stop();
-    m_movementTimer.stop();
-    m_pRootItem->setProperty("programStatus", 0);
-    m_pRootItem->setProperty("progressFormVisible", false);
-    m_pRootItem->setProperty("motorsOnStartPositions", false);
-
-    for(unsigned char i = 1; i <= 3; ++i) {
-        controller.stopMotor(i);
-        controller.setMicroStepValue(i, controller.motorMicrostep(i));
-    }
-}
-
 void mainWindow::portsRescanClicked() {
     m_pPortsModel->clear();
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
@@ -204,11 +187,6 @@ void mainWindow::portsRescanClicked() {
         m_pPortsModel->appendRow(new comPortItem(portName, this));
     }
 }
-
-//void mainWindow::checkMotorAttachmentClicked() {
-//    qDebug()<<"check motor attachment clicked";
-//    controller.motorsStatus();
-//}
 
 void mainWindow::connectToDevices() {
     if(!controller.openPort(m_portName)) {
@@ -226,19 +204,6 @@ void mainWindow::connectToDevices() {
     }
 
     controller.setAction("init");
-}
-
-void mainWindow::motorsStatusFinished(const QByteArray &data) {
-    if(!data.size()) {
-        qDebug()<<"motor attachment data is empty";
-        return;
-    }
-
-    unsigned char ret = data[1];
-    //ret = 0xff;
-    m_pRootItem->setProperty("motor1Available", (ret & 1) != 0);
-    m_pRootItem->setProperty("motor2Available", (ret & 2) != 0);
-    m_pRootItem->setProperty("motor3Available", (ret & 4) != 0);
 }
 
 void mainWindow::movementCheckRequest() {

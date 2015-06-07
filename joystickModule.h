@@ -17,8 +17,6 @@ private:
 private slots:
     void joystickMoved(int x, int y);
     void sliderMoved(int x);
-    void setStartClicked();
-    void setEndClicked();
     void maxJoystickSpeedChanged(qreal pos);
     void dampingChanged(qreal pos);
 };

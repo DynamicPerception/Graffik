@@ -39,7 +39,7 @@ Components.Box {
     window.shootingHours = hoursLine.text
     window.shootingMinutes = minutesLine.text
     window.shootingSecs = secondsLine.text
-    window.validateRequest()
+    window.validateRequest(-1)
   }
 
   function setVideoLength(secs) {
@@ -54,7 +54,7 @@ Components.Box {
     lengthLineCompiledSeconds.text = s < 10 ? "0" + s : s
     lengthLineVideoMinutes.text = lengthLineCompiledMinutes.text
     lengthLineVideoSeconds.text = lengthLineVideoMinutes.text
-    window.validateRequest()
+    window.validateRequest(-1)
   }
 
   function exposureChanged() {
@@ -80,7 +80,7 @@ Components.Box {
     window.triggerTime = trigger
     window.exposureDelay = delay
     intervalLine.text = box.round(interval)
-    window.validateRequest()
+    window.validateRequest(-1)
   }
 
   function advancedSettingsChanged() {
@@ -106,7 +106,7 @@ Components.Box {
     window.triggerTime = trigger
     window.exposureDelay = delay
 
-    window.validateRequest()
+    window.validateRequest(-1)
   }
 
   function focusChanged() {
@@ -125,7 +125,7 @@ Components.Box {
       intervalLine.text = box.round(exposure + focus)
       setShootingDuration(interval * frames)
     } else {
-      window.validateRequest()
+      window.validateRequest(-1)
     }
   }
 
@@ -197,7 +197,7 @@ Components.Box {
       window.shootingHours = hoursLine.text
       window.shootingMinutes = minutesLine.text
       window.shootingSecs = secondsLine.text
-      window.validateRequest()
+      window.validateRequest(-1)
     }
   }
 
@@ -278,7 +278,7 @@ Components.Box {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-          controller.setCameraEnabled(true)
+          controller.enableCamera(true)
           if(window.programMode == 2) {
             window.programMode = box.prevProgramMode
           }
@@ -308,7 +308,7 @@ Components.Box {
         cursorShape: Qt.PointingHandCursor
 
         onClicked: {
-          controller.setCameraEnabled(false)
+          controller.enableCamera(false)
           box.prevProgramMode = window.programMode
           window.programMode = 2
         }

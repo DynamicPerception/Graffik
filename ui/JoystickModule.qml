@@ -19,25 +19,12 @@ Item {
       interval: 1000
     }
 
-//    Text {
-//      anchors.top: parent.top
-//      anchors.horizontalCenter: parent.horizontalCenter
-//      anchors.horizontalCenterOffset: -17
-//      anchors.topMargin: 5
-//      font.family: "Arial"
-//      font.pixelSize: 13
-//      font.bold: true
-//      text: qsTr("Start")
-//      color: setStartArea.pressed ? "#FFFFFF" : "#7F7F7F"
-//    }
-
     MouseArea {
       id: setStartArea
       anchors.fill: parent
       onClicked: {
         startTimer.restart()
-        window.setStartClicked()
-        //window.validateRequest()
+        controller.setProgramStartPoint()
       }
     }
   }
@@ -56,25 +43,12 @@ Item {
       interval: 1000
     }
 
-//    Text {
-//      anchors.top: parent.top
-//      anchors.horizontalCenter: parent.horizontalCenter
-//      anchors.horizontalCenterOffset: 17
-//      anchors.topMargin: 5
-//      font.family: "Arial"
-//      font.pixelSize: 13
-//      font.bold: true
-//      text: qsTr("Stop")
-//      color: setStopArea.pressed ? "#FFFFFF" : "#7F7F7F"
-//    }
-
     MouseArea {
       id: setStopArea
       anchors.fill: parent
       onClicked: {
         stopTimer.restart()
-        window.setEndClicked()
-        //window.validateRequest()
+        controller.setProgramStopPoint()
       }
     }
   }
@@ -124,7 +98,7 @@ Item {
           height: 20
           font.pixelSize: 16
           verticalAlignment: Text.AlignVCenter
-          text: qsTr("Address %1").arg(window.currentControllerAddress)
+          text: qsTr("Address %1").arg(window.currentControllerAddress - 2)
         }
 
         Components.StandardButton {
