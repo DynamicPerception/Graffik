@@ -80,7 +80,7 @@ Item {
           target: controller
           function appendMotor(address, port) {
             motorsModel.append({
-              "motorAddress" : address,
+              "deviceAddress" : address,
               "motorPort" : port,
               "motorValid" : true,
               "motorPowerSave" : true
@@ -92,11 +92,10 @@ Item {
           }
 
           onMotorStatusFinished: {
-            console.log("motor status finished")
             var toRemove = new Array()
             var found = new Array()
-            //var ret = data[1]
-            var ret = 7
+            var ret = data[1]
+            //var ret = 7
 
             if(ret & 1 > 0) appendMotor(address, 1)
             if(ret & 2 > 0) appendMotor(address, 2)

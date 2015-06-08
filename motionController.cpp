@@ -32,12 +32,12 @@ bool motionController::openPort(const QString &portName) {
 #endif
   m_portName = portName;
   if(m_serialPort.open(QSerialPort::ReadWrite)) {
-      connect(&m_timer, SIGNAL(timeout()), this, SLOT(timerTimeout()));
-      connect(&m_connectionTimer, SIGNAL(timeout()), this, SLOT(connectionError()));
-      connect(&m_serialPort, SIGNAL(readyRead()), this, SLOT(serialPortReadyRead()));
-      connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialPortError(QSerialPort::SerialPortError)));
-      return true;
-    }
+    connect(&m_timer, SIGNAL(timeout()), this, SLOT(timerTimeout()));
+    connect(&m_connectionTimer, SIGNAL(timeout()), this, SLOT(connectionError()));
+    connect(&m_serialPort, SIGNAL(readyRead()), this, SLOT(serialPortReadyRead()));
+    connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(serialPortError(QSerialPort::SerialPortError)));
+    return true;
+  }
 
   return false;
 }
@@ -799,106 +799,106 @@ void motionController::invertMotorDirection(unsigned char address, unsigned char
 
 void motionController::processCommands() {
   if(!m_requestsQueue.empty()) {
-      commandRequest cr = m_requestsQueue.dequeue();
-      if(cr.address == 0 && cr.subAddress == 0 &&
-         cr.command == 0)
-        {
-          QByteArray buff((char*)cr.data, cr.dataLength);
-          if(buff == "__close__") {
-              m_blocked = false;
-              m_repliesBuffer.clear();
-              m_serialPort.close();
-              //maybe lets not do that?
-              m_requestsQueue.clear();
-            } else {
-              emit actionFinished(QString(buff));
-            }
+    commandRequest cr = m_requestsQueue.dequeue();
+    if(cr.address == 0 && cr.subAddress == 0 &&
+       cr.command == 0)
+    {
+      QByteArray buff((char*)cr.data, cr.dataLength);
+      if(buff == "__close__") {
+        m_blocked = false;
+        m_repliesBuffer.clear();
+        m_serialPort.close();
+        //maybe lets not do that?
+        m_requestsQueue.clear();
+      } else {
+        emit actionFinished(QString(buff));
+      }
 
-          return;
-        }
-
-      m_serialPort.setProperty("command", cr.command);
-      m_serialPort.setProperty("subAddress", cr.subAddress);
-      m_serialPort.setProperty("address", cr.address);
-      m_blocked = cr.blocking;
-
-      qDebug()<<cr;
-
-      const char *pRequest = (const char*)&cr;
-      m_serialPort.write(++pRequest, cr.size());
-      m_serialPort.flush();
+      return;
     }
+
+    m_serialPort.setProperty("command", cr.command);
+    m_serialPort.setProperty("subAddress", cr.subAddress);
+    m_serialPort.setProperty("address", cr.address);
+    m_blocked = cr.blocking;
+
+    qDebug()<<cr;
+
+    const char *pRequest = (const char*)&cr;
+    m_serialPort.write(++pRequest, cr.size());
+    m_serialPort.flush();
+  }
 }
 
 void motionController::replyEmiter(unsigned char address, unsigned char subAddress,
                                    unsigned char command, const QByteArray &data)
 {
   if(address == 1) {
-      qDebug()<<"test controller finished";
-      switch(command) {
-        case 5: emit testControllerFinished(data); break;
-      }
-    } else if(subAddress == 0) {
-      switch(command) {
-        case 100: emit firmwareVersionFinished(data); break;
-        case 124: emit motorStatusFinished(address, data); break;
-        case 123: emit programProgressFinished(data); break;
-        case 129: emit validateMotorsFinished(data); break;
-        case 130: emit powerSaveStatusFinished(data); break;
-        case 128: emit motorsRunningFinished(data); break;
-        case 26: emit settingStartPointFinished(data); break;
-        case 27: emit settingEndPointFinished(data); break;
-      }
-    } else if(subAddress == 4) {
-      switch(command) {
-        case 108: qDebug()<<data.toHex(); break;
-      }
-    } else if(subAddress >= 1 && subAddress <= 3) {
-      switch(command) {
-        case 106: emit motorPositionFinished(data); break;
-        case 107: emit motorRunningFinished(data); break;
-        case 118: emit validateMotorFinished(data); break;
-      }
+    qDebug()<<"test controller finished";
+    switch(command) {
+      case 5: emit testControllerFinished(data); break;
     }
+  } else if(subAddress == 0) {
+    switch(command) {
+      case 100: emit firmwareVersionFinished(data); break;
+      case 124: emit motorStatusFinished(address, data); break;
+      case 123: emit programProgressFinished(data); break;
+      case 129: emit validateMotorsFinished(data); break;
+      case 130: emit powerSaveStatusFinished(data); break;
+      case 128: emit motorsRunningFinished(data); break;
+      case 26: emit settingStartPointFinished(data); break;
+      case 27: emit settingEndPointFinished(data); break;
+    }
+  } else if(subAddress == 4) {
+    switch(command) {
+      case 108: qDebug()<<data.toHex(); break;
+    }
+  } else if(subAddress >= 1 && subAddress <= 3) {
+    switch(command) {
+      case 106: emit motorPositionFinished(data); break;
+      case 107: emit motorRunningFinished(data); break;
+      case 118: emit validateMotorFinished(data); break;
+    }
+  }
 }
 
 void motionController::serialPortReadyRead() {
   m_repliesBuffer.append(m_serialPort.readAll());
 
   if(m_repliesBuffer.size() >= 10) {
-      int replyPos = m_repliesBuffer.indexOf(QByteArray("\x00\x00\x00\x00\x00\xFF"));
-      if(replyPos > 0) {
-          m_repliesBuffer.remove(0, replyPos);
-          qDebug()<<"shifted reply";
-        } else if(replyPos == -1) {
-          m_repliesBuffer.clear();
-          m_blocked = false;
-          qDebug()<<"bad reply";
-          return;
-        }
-
-      int dataSize = m_repliesBuffer[9]; //byte 10 cointains data size of reply
-      if(dataSize + 10 <= m_repliesBuffer.size()) {
-          QByteArray reply = m_repliesBuffer.mid(10, dataSize);
-
-          unsigned char command = m_serialPort.property("command").toUInt();
-          unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
-          unsigned char address = m_serialPort.property("address").toUInt();
-
-          qDebug()<<"processed | address:"<<address<<"subAddress:"<<subAddress<<"command:"<<command<<"data:"<<m_repliesBuffer.left(10 + dataSize).toHex();
-          replyEmiter(address, subAddress, command, reply);
-
-          m_repliesBuffer.remove(0, 10 + dataSize);
-          m_blocked = false;
-          m_timer.start();
-        }
+    int replyPos = m_repliesBuffer.indexOf(QByteArray("\x00\x00\x00\x00\x00\xFF"));
+    if(replyPos > 0) {
+      m_repliesBuffer.remove(0, replyPos);
+      qDebug()<<"shifted reply";
+    } else if(replyPos == -1) {
+      m_repliesBuffer.clear();
+      m_blocked = false;
+      qDebug()<<"bad reply";
+      return;
     }
+
+    int dataSize = m_repliesBuffer[9]; //byte 10 cointains data size of reply
+    if(dataSize + 10 <= m_repliesBuffer.size()) {
+      QByteArray reply = m_repliesBuffer.mid(10, dataSize);
+
+      unsigned char command = m_serialPort.property("command").toUInt();
+      unsigned char subAddress = m_serialPort.property("subAddress").toUInt();
+      unsigned char address = m_serialPort.property("address").toUInt();
+
+      qDebug()<<"processed | address:"<<address<<"subAddress:"<<subAddress<<"command:"<<command<<"data:"<<m_repliesBuffer.left(10 + dataSize).toHex();
+      replyEmiter(address, subAddress, command, reply);
+
+      m_repliesBuffer.remove(0, 10 + dataSize);
+      m_blocked = false;
+      m_timer.start();
+    }
+  }
 }
 
 void motionController::serialPortError(QSerialPort::SerialPortError err) {
   if(err != QSerialPort::NoError) {
-      qDebug()<<"serial port error:"<<err;
-    }
+    qDebug()<<"serial port error:"<<err;
+  }
 }
 
 void motionController::timerTimeout() {

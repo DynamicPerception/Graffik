@@ -7,8 +7,7 @@ Components.Box {
   property int prevProgramMode: 0
   property bool completed: false
   clip: false
-  height: timelapseColumn.y + timelapseColumn.height + 20
-
+  height: controllerAddressColumn.y + controllerAddressColumn.height + 20
   Component.onCompleted: completed = true
 
 
@@ -25,7 +24,7 @@ Components.Box {
     return s
   }
 
-  function setShootingDuration(secs) {
+  function setShootingDuration(secs, deviceAddress) {
     if(!completed) return
 
     var h = parseInt(secs / 3600)
@@ -39,10 +38,10 @@ Components.Box {
     window.shootingHours = hoursLine.text
     window.shootingMinutes = minutesLine.text
     window.shootingSecs = secondsLine.text
-    window.validateRequest(-1)
+    window.validateRequest(deviceAddress)
   }
 
-  function setVideoLength(secs) {
+  function setVideoLength(secs, deviceAddress) {
     if(!completed) return
 
     var m = parseInt(secs / 60) % 60
@@ -54,10 +53,10 @@ Components.Box {
     lengthLineCompiledSeconds.text = s < 10 ? "0" + s : s
     lengthLineVideoMinutes.text = lengthLineCompiledMinutes.text
     lengthLineVideoSeconds.text = lengthLineVideoMinutes.text
-    window.validateRequest(-1)
+    window.validateRequest(deviceAddress)
   }
 
-  function exposureChanged() {
+  function exposureChanged(deviceAddress) {
     if(!completed) return
 
     var exposure = parseFloat(exposureLine.text)
@@ -80,10 +79,10 @@ Components.Box {
     window.triggerTime = trigger
     window.exposureDelay = delay
     intervalLine.text = box.round(interval)
-    window.validateRequest(-1)
+    window.validateRequest(window.validateRequest)
   }
 
-  function advancedSettingsChanged() {
+  function advancedSettingsChanged(deviceAddress) {
     if(!completed) return
 
     var interval = parseFloat(intervalLine.text)
@@ -106,10 +105,10 @@ Components.Box {
     window.triggerTime = trigger
     window.exposureDelay = delay
 
-    window.validateRequest(-1)
+    window.validateRequest(deviceAddress)
   }
 
-  function focusChanged() {
+  function focusChanged(deviceAddress) {
     if(!completed) return
 
     var buffer = parseFloat(bufferLine.text)
@@ -123,13 +122,13 @@ Components.Box {
 
     if(buffer < focus) {
       intervalLine.text = box.round(exposure + focus)
-      setShootingDuration(interval * frames)
+      setShootingDuration(interval * frames, deviceAddress)
     } else {
-      window.validateRequest(-1)
+      window.validateRequest(deviceAddress)
     }
   }
 
-  function intervalChanged() {
+  function intervalChanged(deviceAddress) {
     if(!completed) return
 
     var focus = parseFloat(focusLine.text)
@@ -144,10 +143,10 @@ Components.Box {
     bufferLine.text = box.round(interval - exposure)
     intervalLine.text = box.round(interval)
     window.interval = interval
-    setShootingDuration(interval * frames)
+    setShootingDuration(interval * frames, deviceAddress)
   }
 
-  function framesChanged() {
+  function framesChanged(deviceAddress) {
     if(!completed) return
 
     var interval = parseFloat(intervalLine.text)
@@ -159,12 +158,12 @@ Components.Box {
       frameLine.text = parseInt(frames)
     }
 
-    setVideoLength(frames / fps)
+    setVideoLength(frames / fps, deviceAddress)
     window.videoFrames = frames
-    setShootingDuration(interval * frames)
+    setShootingDuration(interval * frames, deviceAddress)
   }
 
-  function shootingDurationChanged() {
+  function shootingDurationChanged(deviceAddress) {
     if(!completed) return
 
     var h = parseInt(hoursLine.text) * 3600
@@ -180,11 +179,11 @@ Components.Box {
       frames = Math.round(599.99 * fps)
 
       frameLine.text = parseInt(frames)
-      setShootingDuration(frames * interval)
-      setVideoLength(frames / fps)
+      setShootingDuration(frames * interval, deviceAddress)
+      setVideoLength(frames / fps, deviceAddress)
     } else {
       frameLine.text = parseInt(frames)
-      setVideoLength(frames / fps)
+      setVideoLength(frames / fps, deviceAddress)
 
       h = parseInt(hoursLine.text)
       m = parseInt(minutesLine.text)
@@ -197,11 +196,11 @@ Components.Box {
       window.shootingHours = hoursLine.text
       window.shootingMinutes = minutesLine.text
       window.shootingSecs = secondsLine.text
-      window.validateRequest(-1)
+      window.validateRequest(deviceAddress)
     }
   }
 
-  function videoLengthChanged() {
+  function videoLengthChanged(deviceAddress) {
     if(!completed) return
 
     var interval = parseFloat(intervalLine.text)
@@ -218,18 +217,17 @@ Components.Box {
       frames = Math.round(599.99 * fps)
 
     frameLine.text = parseInt(frames)
-    setShootingDuration(interval * frames)
+    setShootingDuration(interval * frames, deviceAddress)
   }
 
-  function fpsChanged() {
+  function fpsChanged(deviceAddress) {
     if(!completed) return
 
     var frames = parseFloat(frameLine.text)
     var fps = parseFloat(fpsDropdown.text)
 
-    setVideoLength(frames / fps)
+    setVideoLength(frames / fps, deviceAddress)
   }
-
 
   /*******************************
              UI Componenets
@@ -244,7 +242,6 @@ Components.Box {
   }
 
   Image {
-
     // Timelapse / Video selector switch
     id: modeButtons
     anchors.horizontalCenter: parent.horizontalCenter
@@ -351,7 +348,12 @@ Components.Box {
           label: "M"
           onAccepted: {
             lengthLineCompiledMinutes.text = text
-            box.videoLengthChanged()
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.videoLengthChanged(i + 3)
+            } else {
+              box.videoLengthChanged(window.currentControllerAddress)
+            }
           }
         }
 
@@ -382,7 +384,12 @@ Components.Box {
           label: "S"
           onAccepted: {
             lengthLineCompiledSeconds.text = text
-            box.videoLengthChanged()
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.videoLengthChanged(i + 3)
+            } else {
+              box.videoLengthChanged(window.currentControllerAddress)
+            }
           }
         }
 
@@ -440,32 +447,34 @@ Components.Box {
       NumberAnimation { duration: 100; easing.type: Easing.InQuad }
     }
 
-    // Continuous TL mode button
-    Components.RadioButton {
-      id: continuousButton
+    Row {
       anchors.left: parent.left
       anchors.right: parent.right
-      text: qsTr("Continuous")
-      checked: false
-      onClicked: {
-        window.programMode = 1
-        moveShootButton.checked = false
+
+      // Continuous TL mode button
+      Components.RadioButton {
+        id: continuousButton
+        width: parent.width / 2
+        text: qsTr("Continuous")
+        checked: false
+        onClicked: {
+          window.programMode = 1
+          moveShootButton.checked = false
+        }
+      }
+
+      // SMS mode button
+      Components.RadioButton {
+        id: moveShootButton
+        width: parent.width / 2
+        text: qsTr("Move Shoot")
+        checked: true
+        onClicked: {
+          window.programMode = 0
+          continuousButton.checked = false
+        }
       }
     }
-
-    // SMS mode button
-    Components.RadioButton {
-      id: moveShootButton
-      anchors.left: parent.left
-      anchors.right: parent.right
-      text: qsTr("Move Shoot")
-      checked: true
-      onClicked: {
-        window.programMode = 0
-        continuousButton.checked = false
-      }
-    }
-
 
     Grid {
       anchors.left: parent.left
@@ -490,7 +499,14 @@ Components.Box {
 
         maxValue: 60; minValue: 0
         validationEnabled: true
-        onAccepted: box.exposureChanged()
+        onAccepted: {
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.exposureChanged(i + 3)
+          } else {
+            box.exposureChanged(window.currentControllerAddress)
+          }
+        }
       }
 
       // Separator
@@ -530,7 +546,14 @@ Components.Box {
 
         maxValue: 10500; minValue: 0
         validationEnabled: true
-        onAccepted: box.intervalChanged()
+        onAccepted: {
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.intervalChanged(i + 3)
+          } else {
+            box.intervalChanged(window.currentControllerAddress)
+          }
+        }
       }
 
       // Exposure, buffer, interval label line
@@ -605,7 +628,12 @@ Components.Box {
             focusLine.text = window.focusTime
             triggerLine.text = window.triggerTime
             exposureDelayLine.text = window.exposureDelay
-            box.advancedSettingsChanged()
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.advancedSettingsChanged(i + 3)
+            } else {
+              box.advancedSettingsChanged(window.currentControllerAddress)
+            }
           }
         }
       }
@@ -635,7 +663,14 @@ Components.Box {
 
           maxValue: 60; minValue: 0
           validationEnabled: true
-          onAccepted: box.advancedSettingsChanged()
+          onAccepted: {
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.advancedSettingsChanged(i + 3)
+            } else {
+              box.advancedSettingsChanged(window.currentControllerAddress)
+            }
+          }
         }
 
         // Trigger input box
@@ -651,7 +686,14 @@ Components.Box {
 
           maxValue: 10000; minValue: 0
           validationEnabled: true
-          onAccepted: box.advancedSettingsChanged()
+          onAccepted: {
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.advancedSettingsChanged(i + 3)
+            } else {
+              box.advancedSettingsChanged(window.currentControllerAddress)
+            }
+          }
         }
 
         // Exposure delay input box
@@ -667,7 +709,14 @@ Components.Box {
 
           maxValue: 60; minValue: 0
           validationEnabled: true
-          onAccepted: box.advancedSettingsChanged()
+          onAccepted: {
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.advancedSettingsChanged(i + 3)
+            } else {
+              box.advancedSettingsChanged(window.currentControllerAddress)
+            }
+          }
         }
 
         // Focus label
@@ -717,7 +766,15 @@ Components.Box {
         validator: IntValidator { bottom: 0 }
         text: window.shootingHours
         label: "H"
-        onAccepted: box.shootingDurationChanged()
+        onAccepted: {
+          lengthLineCompiledMinutes.text = text
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.shootingDurationChanged(i + 3)
+          } else {
+            box.shootingDurationChanged(window.currentControllerAddress)
+          }
+        }
       }
 
       // ":" Separator
@@ -740,7 +797,15 @@ Components.Box {
         validator: IntValidator { top: 59; bottom: 0 }
         text: window.shootingMinutes
         label: "M"
-        onAccepted: box.shootingDurationChanged()
+        onAccepted: {
+          lengthLineCompiledMinutes.text = text
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.shootingDurationChanged(i + 3)
+          } else {
+            box.shootingDurationChanged(window.currentControllerAddress)
+          }
+        }
       }
 
       // ":" Separator
@@ -763,7 +828,15 @@ Components.Box {
         validator: IntValidator { top: 59; bottom: 0 }
         text: window.shootingSecs
         label: "S"
-        onAccepted: box.shootingDurationChanged()
+        onAccepted: {
+          lengthLineCompiledMinutes.text = text
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.shootingDurationChanged(i + 3)
+          } else {
+            box.shootingDurationChanged(window.currentControllerAddress)
+          }
+        }
       }
     }
 
@@ -791,7 +864,14 @@ Components.Box {
         width: 70
         validator: IntValidator { bottom: 0 }
         text: window.videoFrames
-        onAccepted: box.framesChanged()
+        onAccepted: {
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.framesChanged(i + 3)
+          } else {
+            box.framesChanged(window.currentControllerAddress)
+          }
+        }
       }
 
       // FPS dropdown menu
@@ -801,7 +881,14 @@ Components.Box {
         z: 1
         dataModel: fpsModel
         text: "24"
-        onCurrentIndexChanged: box.fpsChanged()
+        onCurrentIndexChanged: {
+          if(coordinatedButton.checked) {
+            for(var i = 0; i < window.currentControllerAddress; ++i)
+              box.fpsChanged(i + 3)
+          } else {
+            box.fpsChanged(window.currentControllerAddress)
+          }
+        }
       }
 
       // Frames label
@@ -846,7 +933,12 @@ Components.Box {
           label: "M"
           onAccepted: {
             lengthLineVideoMinutes.text = text
-            box.videoLengthChanged()
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.videoLengthChanged(i + 3)
+            } else {
+              box.videoLengthChanged(window.currentControllerAddress)
+            }
           }
         }
 
@@ -878,10 +970,60 @@ Components.Box {
           label: "S"
           onAccepted: {
             lengthLineVideoSeconds.text = text
-            box.videoLengthChanged()
+            if(coordinatedButton.checked) {
+              for(var i = 0; i < window.currentControllerAddress; ++i)
+                box.videoLengthChanged(i + 3)
+            } else {
+              box.videoLengthChanged(window.currentControllerAddress)
+            }
           }
         }
       }
     }
   }   // End timelapse tab components
+
+  Column {
+    id: controllerAddressColumn
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: timelapseColumn.bottom
+    anchors.topMargin: 10
+    anchors.leftMargin: 20
+    anchors.rightMargin: 20
+    spacing: 10
+
+    // Separator
+    Components.VerticalSeparator { width: parent.width }
+
+    Components.Label {
+      anchors.horizontalCenter: parent.horizontalCenter
+      font.pixelSize: 16
+      text: qsTr("Controller address")
+    }
+
+    Row {
+      anchors.left: parent.left
+      anchors.right: parent.right
+
+      Components.RadioButton {
+        id: coordinatedButton
+        width: parent.width / 2
+        text: qsTr("Coordinated")
+        checked: false
+        onClicked: {
+          independentButton.checked = false
+        }
+      }
+
+      Components.RadioButton {
+        id: independentButton
+        width: parent.width / 2
+        text: qsTr("Independent")
+        checked: true
+        onClicked: {
+          coordinatedButton.checked = false
+        }
+      }
+    }
+  }
 }

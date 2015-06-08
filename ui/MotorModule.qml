@@ -70,7 +70,13 @@ Components.Box {
       target: controller
       onValidateMotorsFinished: {
         if(address === deviceAddress) {
+          var ret = data[1]
 
+          switch(motorPort) {
+          case 1: plot.error = ret & 1 > 0; break;
+          case 2: plot.error = ret & 2 > 0; break;
+          case 3: plot.error = ret & 4 > 0; break;
+          }
         }
       }
     }
@@ -111,7 +117,7 @@ Components.Box {
           dataModel: easingModel
           onCurrentIndexChanged: {
             var easing = currentIndex === 2 ? 1 : currentIndex + 2
-            controller.easingType(motorAddress, motorPort, easing)
+            controller.easingType(deviceAddress, motorPort, easing)
             plot.easing = easing
           }
         }
@@ -152,7 +158,7 @@ Components.Box {
             default: resolution = 4;
             }
 
-            controller.setMicroStepValue(motorAddress, motorPort, resolution);
+            controller.setMicroStepValue(deviceAddress, motorPort, resolution);
           }
         }
 
@@ -178,7 +184,7 @@ Components.Box {
             bottom: 0
           }
 
-          onAccepted: controller.setBacklash(motorAddress, motorPort, parseInt(text))
+          onAccepted: controller.setBacklash(deviceAddress, motorPort, parseInt(text))
         }
 
         Components.Label {
@@ -202,7 +208,7 @@ Components.Box {
             anchors.centerIn: parent
             width: 60
             checked: motorPowerSave
-            onCheckedChanged: controller.setMotorSleep(motorAddress, motorPort, checked)
+            onCheckedChanged: controller.setMotorSleep(deviceAddress, motorPort, checked)
           }
         }
 
@@ -226,7 +232,7 @@ Components.Box {
             id: invertDirectionSwitcher
             anchors.centerIn: parent
             width: 60
-            onCheckedChanged: controller.invertMotorDirection(motorAddress, motorPort, checked)
+            onCheckedChanged: controller.invertMotorDirection(deviceAddress, motorPort, checked)
           }
         }
 
@@ -256,7 +262,7 @@ Components.Box {
             easingTypeDropdown.text = "Quadratic"
             backlashLine.text = "0"
             plot.clear()
-            controller.setBacklash(motorAddress, motorPort, parseInt(text))
+            controller.setBacklash(deviceAddress, motorPort, parseInt(text))
           }
         }
 
